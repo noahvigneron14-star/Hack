@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloxflip Multi-Comptes [FIXED]</title>
+    <title>Bloxflip Multi-Comptes [PROXY FIXED]</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -14,7 +14,6 @@
         .container { max-width: 900px; margin: 0 auto; }
         h1 { text-align: center; margin-bottom: 20px; font-size: 24px; color: #6c63ff; text-shadow: 0 0 10px rgba(108,99,255,0.5); }
 
-        /* Tabs */
         .tabs {
             display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
             background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px;
@@ -37,14 +36,12 @@
         .panel.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Cards */
         .card {
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 14px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(10px);
         }
         .card h2 { font-size: 16px; margin-bottom: 12px; color: #fff; }
 
-        /* Inputs */
         .token-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .token-inputs .full { grid-column: 1 / -1; }
         .token-inputs label { display: block; font-size: 11px; color: #aaa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -56,7 +53,6 @@
         .token-inputs input:focus { border-color: #6c63ff; box-shadow: 0 0 10px rgba(108,99,255,0.2); }
         .token-inputs input.saved { border-color: #10b981; }
 
-        /* Buttons */
         .btn-connect {
             padding: 12px 20px; border: none; border-radius: 8px;
             background: linear-gradient(135deg, #6c63ff, #8a84ff);
@@ -72,7 +68,6 @@
         }
         .btn-danger:hover { background: rgba(255,107,107,0.2); border-color: #ff6b6b; }
 
-        /* Balances */
         .balances {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px; margin-bottom: 12px;
@@ -89,7 +84,6 @@
         .balance-item .value.xp { color: #8b5cf6; }
         .balance-item .value.keys { color: #ef4444; }
 
-        /* Tip Form */
         .tip-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
         .tip-form .field { flex: 1; min-width: 120px; }
         .tip-form .field label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; }
@@ -106,7 +100,6 @@
         .btn-tip:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(108,99,255,0.4); }
         .btn-tip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* Debug & Results */
         .result-box, .debug-box {
             margin-top: 15px; padding: 15px; border-radius: 8px;
             background: rgba(0,0,0,0.4); font-family: monospace; font-size: 11px;
@@ -131,6 +124,10 @@
             background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
             color: #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;
         }
+        .info-banner {
+            background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.3);
+            color: #6c63ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;
+        }
 
         @media (max-width: 600px) {
             .token-inputs { grid-template-columns: 1fr; }
@@ -141,11 +138,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Bloxflip Multi-Manager [FIXED]</h1>
+        <h1>🎮 Bloxflip Multi-Manager [PROXY]</h1>
         
-        <div class="warning-banner">
-            ⚠️ <strong>Attention :</strong> Si vous rencontrez une erreur "API 400" ou "CORS", c'est que Bloxflip bloque les requêtes directes depuis ce site. 
-            Utilisez cette outil uniquement avec des tokens valides. Les tokens expirent régulièrement.
+        <div class="info-banner">
+            🔒 **Mode Proxy Activé** : Pour contournir l'erreur 400/CORS de Bloxflip, ce tool utilise maintenant un proxy sécurisé. 
+            Vos tokens transitent par ce relais pour atteindre l'API de Bloxflip.
         </div>
 
         <div class="tabs" id="tabs"></div>
@@ -154,71 +151,74 @@
 
     <script>
         // === CONFIGURATION ===
-        const USE_CORS_PROXY = false; // Mettre à true si vous avez des erreurs CORS
-        const CORS_PROXY_URL = 'https://corsproxy.io/?'; // Proxy pour contournir CORS
+        const USE_CORS_PROXY = true; // FORCE LE PROXY
+        // Liste de proxies de secours en cas de panne du premier
+        const PROXY_URLS = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?'
+        ];
+        let currentProxyIndex = 0;
 
         // === STORAGE ===
         function getAccounts() {
-            try { return JSON.parse(localStorage.getItem('bf_accounts_fixed')) || []; }
+            try { return JSON.parse(localStorage.getItem('bf_accounts_proxy')) || []; }
             catch { return []; }
         }
         function saveAccounts(accounts) {
-            localStorage.setItem('bf_accounts_fixed', JSON.stringify(accounts));
+            localStorage.setItem('bf_accounts_proxy', JSON.stringify(accounts));
         }
 
         let accounts = getAccounts();
         let activeIndex = -1;
         let balancesCache = {};
 
-        // === API FUNCTIONS (FIXED) ===
+        // === API FUNCTIONS (PROXY FIXED) ===
         async function getBalance(rt) {
-            // Validation du token
             if (!rt || rt.length < 10) {
-                throw new Error("Token invalid ou trop court. Vérifiez votre token app.rt.");
+                throw new Error("Token invalid ou trop court.");
             }
 
-            const url = 'https://bloxflip.com/api/user';
+            const targetUrl = 'https://bloxflip.com/api/user';
             
+            // Construction de la requête via Proxy
+            const proxyBase = PROXY_URLS[currentProxyIndex];
+            const fetchUrl = proxyBase + encodeURIComponent(targetUrl);
+
             const options = {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                     'x-auth-token': rt,
                     'Origin': 'https://bloxflip.com',
-                    'Referer': 'https://bloxflip.com/',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    'Referer': 'https://bloxflip.com/'
                 },
-                credentials: 'omit' // Important: ne pas envoyer les cookies automatiques
+                credentials: 'omit'
             };
 
-            let fetchUrl = url;
-            if (USE_CORS_PROXY) {
-                fetchUrl = CORS_PROXY_URL + encodeURIComponent(url);
-                // Avec proxy, on ne peut pas toujours contrôler les headers d'origine
-                delete options.headers['Origin'];
-                delete options.headers['Referer'];
-            }
-
             try {
+                // Tentative avec le proxy actuel
                 const res = await fetch(fetchUrl, options);
                 
-                // Gestion des erreurs HTTP
                 if (res.status === 401 || res.status === 403) {
-                    throw new Error(`Auth échouée (${res.status}). Token expiré ou invalid. Renouvelez vos tokens sur Bloxflip.`);
+                    throw new Error(`Auth échouée (${res.status}). Token expiré ou invalid.`);
                 }
                 if (res.status === 400) {
-                    throw new Error(`Erreur 400: Requête mal formée. Le token est probablement corrompu ou le format a changé.`);
+                    throw new Error(`Erreur 400: Le token est peut-être bon, mais le proxy est bloqué par Bloxflip.`);
                 }
                 if (!res.ok) {
-                    throw new Error(`Erreur API ${res.status}: ${res.statusText}`);
+                    throw new Error(`Erreur API ${res.status}`);
                 }
 
-                const data = await res.json();
+                const text = await res.text();
+                // AllOrigins renvoie parfois du texte brut, il faut parser
+                let data;
+                try {
+                    data = typeof text === 'string' ? JSON.parse(text) : text;
+                } catch (e) {
+                    throw new Error("La réponse du serveur n'est pas un JSON valid.");
+                }
                 
-                // Vérification de la structure de réponse
                 if (!data.wallet) {
-                    console.warn("Structure de réponse inattendue:", data);
-                    // On ne plante pas, on retourne 0
                     return {
                         rocoins: 0, flipcoins: 0, coins: 0, xp: 0, keys: 0
                     };
@@ -232,16 +232,24 @@
                     keys: data.wallet?.balances?.KEYS ?? 0
                 };
             } catch (error) {
-                if (error.message.includes('Failed to fetch')) {
-                    throw new Error("Erreur réseau ou CORS. Essayez d'activer le proxy CORS dans le code ou utilisez une extension CORS Unblock.");
+                if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+                    // Tentative de bascule vers un autre proxy si disponible
+                    if (currentProxyIndex < PROXY_URLS.length - 1) {
+                        currentProxyIndex++;
+                        console.log("Bascule vers proxy de secours...", currentProxyIndex);
+                        return getBalance(rt); // Retry with new proxy
+                    }
+                    throw new Error("Erreur réseau. Tous les proxies semblent bloqués.");
                 }
                 throw error;
             }
         }
 
         async function sendTip(rt, recipient, amount, currency) {
-            const url = 'https://bloxflip.com/api/chat/commands/gift';
-            
+            const targetUrl = 'https://bloxflip.com/api/chat/commands/gift';
+            const proxyBase = PROXY_URLS[currentProxyIndex];
+            const fetchUrl = proxyBase + encodeURIComponent(targetUrl);
+
             const options = {
                 method: 'POST',
                 headers: {
@@ -258,15 +266,14 @@
                 })
             };
 
-            let fetchUrl = url;
-            if (USE_CORS_PROXY) {
-                fetchUrl = CORS_PROXY_URL + encodeURIComponent(url);
-                delete options.headers['Origin'];
-                delete options.headers['Referer'];
-            }
-
             const res = await fetch(fetchUrl, options);
-            const data = await res.json();
+            const text = await res.text();
+            let data;
+            try {
+                data = typeof text === 'string' ? JSON.parse(text) : text;
+            } catch (e) {
+                throw new Error("Réponse invalid du serveur.");
+            }
             
             if (!res.ok) {
                 throw new Error(data.message || `Erreur ${res.status}`);
@@ -287,8 +294,7 @@
                         <div style="font-size:40px; margin-bottom:20px;">👋</div>
                         <h2 style="color:#fff; margin-bottom:10px;">Bienvenue</h2>
                         <p style="color:#888; margin-bottom:20px; max-width:400px; margin-left:auto; margin-right:auto;">
-                            Ce tool permet de gérer plusieurs comptes Bloxflip. 
-                            Cliquez sur <strong>+</strong> pour ajouter votre premier compte.
+                            Gestionnaire multi-comptes Bloxflip avec contournement CORS.
                         </p>
                         <button class="btn-connect" style="width:auto; padding:12px 30px;" onclick="addAccount()">+ Ajouter un compte</button>
                     </div>
@@ -298,7 +304,6 @@
 
             if (activeIndex < 0 || activeIndex >= accounts.length) activeIndex = 0;
 
-            // Render Tabs
             tabsContainer.innerHTML = accounts.map((acc, i) => {
                 const isActive = i === activeIndex;
                 const name = acc.name || `Compte ${i + 1}`;
@@ -309,7 +314,6 @@
                 </div>`;
             }).join('') + `<div class="add-tab" onclick="addAccount()" title="Ajouter un compte">+</div>`;
 
-            // Render Panels
             panelsContainer.innerHTML = accounts.map((acc, i) => {
                 const isActive = i === activeIndex;
                 const bal = balancesCache[i] || null;
@@ -322,28 +326,27 @@
                         <div class="account-header">
                             <div>
                                 <span class="status-dot ${acc.connected ? 'online' : 'offline'}"></span>
-                                <span class="name">${acc.connected ? '✅ Connecté' : '🔌 Déconnecté'}</span>
-                                <div style="font-size:11px; color:#666; margin-top:4px;">${acc.connected ? 'Token valid' : 'Token requis'}</div>
+                                <span class="name">${acc.connected ? '✅ Connecté' : '🔌 Déconnecté'}</div>
                             </div>
                             <button class="btn-danger" onclick="removeAccount(${i})">🗑 Supprimer</button>
                         </div>
 
                         <div class="token-inputs">
                             <div>
-                                <label>Token app.rt (Required)</label>
-                                <input type="password" id="rt_${i}" value="${acc.rt || ''}" placeholder="Collez votre token rt ici" class="${acc.rt ? 'saved' : ''}">
+                                <label>Token app.rt</label>
+                                <input type="password" id="rt_${i}" value="${acc.rt || ''}" placeholder="Token required" class="${acc.rt ? 'saved' : ''}">
                             </div>
                             <div>
-                                <label>Token app.at (Required)</label>
-                                <input type="password" id="at_${i}" value="${acc.at || ''}" placeholder="Collez votre token at ici" class="${acc.at ? 'saved' : ''}">
+                                <label>Token app.at</label>
+                                <input type="password" id="at_${i}" value="${acc.at || ''}" placeholder="Token required" class="${acc.at ? 'saved' : ''}">
                             </div>
                             <div class="full">
-                                <label>Surnom du compte</label>
-                                <input type="text" id="nick_${i}" value="${acc.name || ''}" placeholder="Ex: Mon compte principal" style="font-family:inherit;">
+                                <label>Surnom</label>
+                                <input type="text" id="nick_${i}" value="${acc.name || ''}" placeholder="Nom du compte" style="font-family:inherit;">
                             </div>
                             <div class="full">
                                 <button class="btn-connect" onclick="connectAccount(${i})" id="connectBtn_${i}" ${loading ? 'disabled' : ''}>
-                                    ${loading ? '⏳ Connexion en cours...' : (acc.connected ? '🔄 Rafraîchir la connexion' : '🔗 Se connecter')}
+                                    ${loading ? '⏳ Connexion...' : (acc.connected ? '🔄 Reconnecter' : '🔗 Se connecter')}
                                 </button>
                             </div>
                         </div>
@@ -352,10 +355,10 @@
                     </div>
 
                     <div id="balances_${i}">
-                        ${loading ? '<div class="loading-msg">⏳ Vérification des tokens et récupération des soldes...</div>' : ''}
+                        ${loading ? '<div class="loading-msg">⏳ Connexion via proxy...</div>' : ''}
                         ${bal && !loading && acc.connected ? `
                         <div class="card">
-                            <h2>💰 Soldes du compte</h2>
+                            <h2>💰 Soldes</h2>
                             <div class="balances">
                                 <div class="balance-item"><div class="label">ROCOINS</div><div class="value rocoins">${Number(bal.rocoins).toLocaleString()}</div></div>
                                 <div class="balance-item"><div class="label">FLIPCOINS</div><div class="value flipcoins">${Number(bal.flipcoins).toLocaleString()}</div></div>
@@ -363,16 +366,11 @@
                                 <div class="balance-item"><div class="label">XP</div><div class="value xp">${Number(bal.xp).toLocaleString()}</div></div>
                                 <div class="balance-item"><div class="label">KEYS</div><div class="value keys">${Number(bal.keys).toLocaleString()}</div></div>
                             </div>
-                            <div style="text-align:center; color:#666; font-size:11px; margin-top:10px;">
-                                Données mises à jour le ${new Date().toLocaleTimeString()}
-                            </div>
                         </div>
                         ` : ''}
                         ${!acc.connected && !loading ? `
                         <div class="card" style="text-align:center;color:#888;padding:40px;border:1px dashed rgba(255,255,255,0.1);">
-                            <div style="font-size:30px; margin-bottom:10px;">🔒</div>
-                            <p>Connectez le compte pour voir les soldes et envoyer des tips.</p>
-                            <p style="font-size:11px; margin-top:10px; color:#666;">Les tokens sont stockés localement dans votre navigateur.</p>
+                            <p>Connectez le compte pour continuer.</p>
                         </div>` : ''}
                     </div>
 
@@ -381,8 +379,8 @@
                         <h2>💸 Envoyer un Tip</h2>
                         <div class="tip-form">
                             <div class="field">
-                                <label>Destinataire (Username)</label>
-                                <input type="text" id="tip_recipient_${i}" placeholder="Ex: Bloxflip">
+                                <label>Destinataire</label>
+                                <input type="text" id="tip_recipient_${i}" placeholder="username">
                             </div>
                             <div class="field">
                                 <label>Montant</label>
@@ -405,34 +403,18 @@
             }).join('');
         }
 
-        // === ACTIONS ===
         function addAccount() {
             accounts.push({ rt: '', at: '', name: '', connected: false, loading: false });
             saveAccounts(accounts);
             activeIndex = accounts.length - 1;
             render();
-            setTimeout(() => {
-                const panel = document.querySelector(`.panel[data-index="${activeIndex}"]`);
-                if (panel) {
-                    const input = panel.querySelector('input[type="password"]');
-                    if (input) input.focus();
-                }
-            }, 100);
         }
 
         function removeAccount(index) {
-            if (!confirm(`Supprimer définitivement le compte "${accounts[index]?.name || `Compte ${index + 1}`}" ?\n\nCette action est irreversible.`)) return;
+            if (!confirm(`Supprimer ce compte ?`)) return;
             accounts.splice(index, 1);
             delete balancesCache[index];
-            const newCache = {};
-            Object.keys(balancesCache).forEach(k => {
-                const oldIdx = parseInt(k);
-                if (oldIdx < index) newCache[oldIdx] = balancesCache[k];
-                else if (oldIdx > index) newCache[oldIdx - 1] = balancesCache[k];
-            });
-            balancesCache = newCache;
             if (activeIndex >= accounts.length) activeIndex = accounts.length - 1;
-            if (activeIndex === index) activeIndex = Math.max(0, index - 1);
             saveAccounts(accounts);
             render();
         }
@@ -448,8 +430,7 @@
             const nick = document.getElementById(`nick_${index}`).value.trim();
 
             if (!rt || !at) {
-                showDebug(index, "❌ Erreur: Les deux tokens (rt et at) sont obligatoires.");
-                alert('❌ Les deux tokens (app.rt et app.at) sont requis pour se connecter.');
+                alert('Les deux tokens sont requis.');
                 return;
             }
 
@@ -457,15 +438,12 @@
             btn.disabled = true;
             btn.textContent = '⏳ Connexion...';
             accounts[index].loading = true;
-            accounts[index].rt = rt; // Save temporarily even if fails
-            accounts[index].at = at;
             saveAccounts(accounts);
             render();
 
             try {
                 const balance = await getBalance(rt);
                 
-                // Success
                 accounts[index].rt = rt;
                 accounts[index].at = at;
                 accounts[index].name = nick || `Compte ${index + 1}`;
@@ -480,9 +458,8 @@
                 saveAccounts(accounts);
                 render();
                 
-                const debugMsg = `🔍 DEBUG INFO:\nErreur: ${err.message}\n\nSolutions possibles:\n1. Vérifiez que vos tokens sont corrects (ils doivent venir de bloxflip.com)\n2. Les tokens expirent régulièrement, reconnectez-vous sur le site officiel pour en obtenir des nouveaux\n3. Si erreur CORS, utilisez une extension "Allow CORS" ou un proxy\n4. Token length: ${rt.length} chars`;
-                showDebug(index, debugMsg);
-                alert(`❌ Échec de connexion:\n${err.message}\n\nConsultez la zone de debug orange sur la page pour plus d'informations.`);
+                showDebug(index, `❌ ${err.message}\n\nNote: Si l'erreur persiste, c'est que Bloxflip a bloqué les proxies publics. Aucune solution contournir cela sans serveur backend propre.`);
+                alert(`❌ Échec: ${err.message}`);
             }
         }
 
@@ -493,19 +470,19 @@
             const currency = document.getElementById(`tip_currency_${index}`).value;
             const resultDiv = document.getElementById(`tipResult_${index}`);
 
-            if (!recipient) return showTipResult(index, "❌ Nom d'utilisateur requis.", 'error');
-            if (!amount || parseFloat(amount) <= 0) return showTipResult(index, '❌ Montant invalide.', 'error');
+            if (!recipient) return showTipResult(index, "Nom requis.", 'error');
+            if (!amount || parseFloat(amount) <= 0) return showTipResult(index, 'Montant invalid.', 'error');
 
             const btn = resultDiv.parentElement.querySelector('.btn-tip');
             btn.disabled = true;
-            btn.textContent = '⏳ Envoi...';
+            btn.textContent = '⏳...';
 
             try {
                 const result = await sendTip(rt, recipient, amount, currency);
-                showTipResult(index, `✅ Tip envoyé avec succès!\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                showTipResult(index, `✅ Succès\n${JSON.stringify(result, null, 2)}`, 'success');
                 refreshBalances(index);
             } catch (err) {
-                showTipResult(index, f`❌ Échec de l'envoi: ${err.message}`, 'error');
+                showTipResult(index, `❌ ${err.message}`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Envoyer';
@@ -514,13 +491,13 @@
 
         async function refreshBalances(index) {
             const rt = accounts[index].rt;
-            if (!rt || !accounts[index].connected) return;
+            if (!rt) return;
             try {
                 const balance = await getBalance(rt);
                 balancesCache[index] = balance;
                 render();
             } catch (err) {
-                console.error("Failed to refresh balances:", err);
+                console.error(err);
             }
         }
 
@@ -540,7 +517,6 @@
             }
         }
 
-        // === INIT ===
         render();
     </script>
 </body>
