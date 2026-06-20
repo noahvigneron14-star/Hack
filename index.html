@@ -13,7 +13,6 @@
         }
         .container { max-width: 860px; margin: 0 auto; }
 
-        /* Onglets */
         .tabs {
             display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
         }
@@ -35,7 +34,6 @@
         }
         .add-tab:hover { background: rgba(108,99,255,0.1); border-color: #6c63ff; }
 
-        /* Panneaux */
         .panel { display: none; }
         .panel.active { display: block; }
 
@@ -137,6 +135,9 @@
     </div>
 
     <script>
+        // Configuration du proxy CORS (change si celui-ci ne marche plus)
+        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
         // === STOCKAGE ===
         function getAccounts() {
             try { return JSON.parse(localStorage.getItem('bf_accounts')) || []; }
@@ -150,11 +151,14 @@
         let activeIndex = -1;
         let balancesCache = {};
 
-        // === FONCTIONS API ===
+        // === FONCTIONS API AVEC PROXY ===
         async function getBalance(rt) {
-            const res = await fetch('https://bloxflip.com/api/user', {
-                credentials: 'include',
-                headers: { 'Accept': 'application/json', 'x-auth-token': rt }
+            const target = 'https://bloxflip.com/api/user';
+            const res = await fetch(CORS_PROXY + encodeURIComponent(target), {
+                headers: {
+                    'Accept': 'application/json',
+                    'x-auth-token': rt
+                }
             });
             if (!res.ok) throw new Error(`API ${res.status}`);
             const data = await res.json();
@@ -168,9 +172,9 @@
         }
 
         async function sendTip(rt, recipient, amount, currency) {
-            const res = await fetch('https://bloxflip.com/api/chat/commands/gift', {
+            const target = 'https://bloxflip.com/api/chat/commands/gift';
+            const res = await fetch(CORS_PROXY + encodeURIComponent(target), {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-currency': currency,
@@ -198,8 +202,6 @@
                         <p style="color:#888; font-size:13px;">Clique sur <strong>+</strong> pour ajouter un compte.</p>
                     </div>
                 `;
-                // créer un premier compte automatiquement
-                addAccount();
                 return;
             }
 
@@ -306,7 +308,6 @@
             saveAccounts(accounts);
             activeIndex = accounts.length - 1;
             render();
-            // Focus sur les inputs du nouveau compte
             setTimeout(() => {
                 const panel = document.querySelector(`.panel[data-index="${activeIndex}"]`);
                 if (panel) {
@@ -320,7 +321,6 @@
             if (!confirm(`Supprimer le compte "${accounts[index]?.name || `Compte ${index + 1}`}" ?`)) return;
             accounts.splice(index, 1);
             delete balancesCache[index];
-            // Re-indexer le cache
             const newCache = {};
             Object.keys(balancesCache).forEach(k => {
                 const oldIdx = parseInt(k);
@@ -382,7 +382,7 @@
             const currency = document.getElementById(`tip_currency_${index}`).value;
             const resultDiv = document.getElementById(`tipResult_${index}`);
 
-            if (!recipient) return showTipResult(index, 'Nom d\'utilisateur requis.', 'error');
+            if (!recipient) return showTipResult(index, "Nom d'utilisateur requis.", 'error');
             if (!amount || parseFloat(amount) <= 0) return showTipResult(index, 'Montant invalide.', 'error');
 
             const btn = resultDiv.parentElement.querySelector('.btn-tip');
@@ -392,7 +392,6 @@
             try {
                 const result = await sendTip(rt, recipient, amount, currency);
                 showTipResult(index, JSON.stringify(result, null, 2), result.success ? 'success' : 'error');
-                // Rafraîchir les soldes
                 refreshBalances(index);
             } catch (err) {
                 showTipResult(index, 'Erreur: ' + err.message, 'error');
@@ -419,12 +418,6 @@
         }
 
         // === INIT ===
-        // Sauvegarder les infos quand on change d'onglet ou clique ailleurs
-        document.addEventListener('change', (e) => {
-            // Sauvegarder auto les tokens édités
-            saveAccounts(accounts);
-        });
-
         render();
     </script>
 </body>
