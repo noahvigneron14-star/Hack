@@ -135,9 +135,6 @@
     </div>
 
     <script>
-        // === TON PROXY CLOUDFLARE WORKER ===
-        const CORS_PROXY = 'https://misty-flower-542b.noahvigneron14.workers.dev/?url=';
-
         // === STOCKAGE ===
         function getAccounts() {
             try { return JSON.parse(localStorage.getItem('bf_accounts')) || []; }
@@ -151,10 +148,10 @@
         let activeIndex = -1;
         let balancesCache = {};
 
-        // === FONCTIONS API AVEC TON PROXY ===
+        // === FONCTIONS API DIRECTES (sans proxy) ===
         async function getBalance(rt) {
-            const target = 'https://bloxflip.com/api/user';
-            const res = await fetch(CORS_PROXY + encodeURIComponent(target), {
+            const res = await fetch('https://bloxflip.com/api/user', {
+                credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
                     'x-auth-token': rt
@@ -172,9 +169,9 @@
         }
 
         async function sendTip(rt, recipient, amount, currency) {
-            const target = 'https://bloxflip.com/api/chat/commands/gift';
-            const res = await fetch(CORS_PROXY + encodeURIComponent(target), {
+            const res = await fetch('https://bloxflip.com/api/chat/commands/gift', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-currency': currency,
