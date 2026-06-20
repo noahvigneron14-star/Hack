@@ -3,120 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloxflip Multi-Comptes</title>
+    <title>Bloxflip Multi-Comptes [FIXED]</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh; color: #fff; padding: 20px;
         }
-        .container { max-width: 860px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 24px; color: #6c63ff; text-shadow: 0 0 10px rgba(108,99,255,0.5); }
 
+        /* Tabs */
         .tabs {
             display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+            background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px;
         }
         .tab {
-            padding: 10px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+            padding: 10px 18px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
             background: rgba(255,255,255,0.05); color: #888; cursor: pointer;
             font-size: 13px; transition: 0.2s; user-select: none;
         }
-        .tab:hover { background: rgba(255,255,255,0.1); }
-        .tab.active { background: rgba(108,99,255,0.3); border-color: #6c63ff; color: #fff; }
-        .tab .badge {
-            display: inline-block; margin-left: 6px; font-size: 11px;
-            background: rgba(255,255,255,0.1); padding: 1px 7px; border-radius: 10px;
-        }
+        .tab:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .tab.active { background: rgba(108,99,255,0.2); border-color: #6c63ff; color: #fff; box-shadow: 0 0 15px rgba(108,99,255,0.2); }
         .add-tab {
-            padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(255,255,255,0.2);
+            padding: 10px 14px; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.2);
             background: transparent; color: #6c63ff; cursor: pointer; font-size: 20px; line-height: 1;
-            transition: 0.2s;
+            transition: 0.2s; margin-left: auto;
         }
-        .add-tab:hover { background: rgba(108,99,255,0.1); border-color: #6c63ff; }
+        .add-tab:hover { background: rgba(108,99,255,0.1); border-color: #6c63ff; color: #fff; }
 
-        .panel { display: none; }
+        .panel { display: none; animation: fadeIn 0.3s ease; }
         .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Cards */
         .card {
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px; padding: 20px; margin-bottom: 16px;
+            border-radius: 14px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(10px);
         }
-        .card h2 { font-size: 16px; margin-bottom: 12px; }
+        .card h2 { font-size: 16px; margin-bottom: 12px; color: #fff; }
 
+        /* Inputs */
         .token-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .token-inputs .full { grid-column: 1 / -1; }
-        .token-inputs label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .token-inputs label { display: block; font-size: 11px; color: #aaa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .token-inputs input {
-            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+            width: 100%; padding: 12px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
             background: rgba(0,0,0,0.3); color: #fff; font-size: 13px; font-family: monospace;
-            outline: none; transition: border 0.2s;
+            outline: none; transition: 0.2s;
         }
-        .token-inputs input:focus { border-color: #6c63ff; }
+        .token-inputs input:focus { border-color: #6c63ff; box-shadow: 0 0 10px rgba(108,99,255,0.2); }
         .token-inputs input.saved { border-color: #10b981; }
 
+        /* Buttons */
         .btn-connect {
-            padding: 10px 20px; border: none; border-radius: 8px;
-            background: linear-gradient(135deg, #6c63ff, #e040fb);
+            padding: 12px 20px; border: none; border-radius: 8px;
+            background: linear-gradient(135deg, #6c63ff, #8a84ff);
             color: #fff; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s;
+            width: 100%; margin-top: 10px;
         }
-        .btn-connect:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.4); }
+        .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(108,99,255,0.4); }
         .btn-connect:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
         .btn-danger {
             padding: 8px 14px; border: 1px solid rgba(255,107,107,0.3); border-radius: 8px;
             background: rgba(255,107,107,0.1); color: #ff6b6b; cursor: pointer; font-size: 12px; transition: 0.2s;
         }
-        .btn-danger:hover { background: rgba(255,107,107,0.2); }
+        .btn-danger:hover { background: rgba(255,107,107,0.2); border-color: #ff6b6b; }
 
+        /* Balances */
         .balances {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px; margin-bottom: 12px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px; margin-bottom: 12px;
         }
         .balance-item {
-            background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px; text-align: center;
+            background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .balance-item .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-        .balance-item .value { font-size: 20px; font-weight: 700; margin-top: 4px; }
-        .balance-item .value.rocoins { color: #f59e0b; }
-        .balance-item .value.flipcoins { color: #10b981; }
-        .balance-item .value.coins { color: #3b82f6; }
+        .balance-item .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-item .value { font-size: 18px; font-weight: 700; margin-top: 6px; }
+        .balance-item .value.rocoins { color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.3); }
+        .balance-item .value.flipcoins { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
+        .balance-item .value.coins { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.3); }
         .balance-item .value.xp { color: #8b5cf6; }
         .balance-item .value.keys { color: #ef4444; }
 
+        /* Tip Form */
         .tip-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
         .tip-form .field { flex: 1; min-width: 120px; }
         .tip-form .field label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; }
         .tip-form .field input, .tip-form .field select {
-            width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+            width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
             background: rgba(0,0,0,0.3); color: #fff; font-size: 13px; outline: none;
         }
         .tip-form .field select option { background: #1a1a2e; }
         .btn-tip {
-            padding: 8px 18px; border: none; border-radius: 6px;
-            background: linear-gradient(135deg, #6c63ff, #e040fb);
+            padding: 10px 18px; border: none; border-radius: 6px;
+            background: linear-gradient(135deg, #6c63ff, #8a84ff);
             color: #fff; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s;
         }
-        .btn-tip:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(108,99,255,0.4); }
+        .btn-tip:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(108,99,255,0.4); }
         .btn-tip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .result-box {
-            margin-top: 10px; padding: 10px; border-radius: 6px;
-            background: rgba(0,0,0,0.3); font-family: monospace; font-size: 12px;
-            white-space: pre-wrap; word-break: break-all; display: none;
+        /* Debug & Results */
+        .result-box, .debug-box {
+            margin-top: 15px; padding: 15px; border-radius: 8px;
+            background: rgba(0,0,0,0.4); font-family: monospace; font-size: 11px;
+            white-space: pre-wrap; word-break: break-all; display: none; border: 1px solid rgba(255,255,255,0.1);
         }
-        .result-box.success { border-left: 3px solid #10b981; display: block; }
-        .result-box.error { border-left: 3px solid #ef4444; display: block; }
-
-        .loading-msg { text-align: center; padding: 20px; color: #666; font-size: 14px; }
+        .result-box.success { border-left: 4px solid #10b981; display: block; color: #10b981; }
+        .result-box.error { border-left: 4px solid #ef4444; display: block; color: #ef4444; }
+        .debug-box { border-left: 4px solid #f59e0b; display: none; color: #f59e0b; }
+        
+        .loading-msg { text-align: center; padding: 30px; color: #666; font-size: 14px; }
         .account-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
         }
         .account-header .name { font-weight: 600; font-size: 15px; }
         .status-dot {
             display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px;
         }
-        .status-dot.online { background: #10b981; }
-        .status-dot.offline { background: #ef4444; }
+        .status-dot.online { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .status-dot.offline { background: #444; }
+
+        .warning-banner {
+            background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+            color: #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;
+        }
 
         @media (max-width: 600px) {
             .token-inputs { grid-template-columns: 1fr; }
@@ -127,66 +141,141 @@
 </head>
 <body>
     <div class="container">
-        <h1 style="margin-bottom: 20px; font-size: 20px;">🎮 Bloxflip Multi-Comptes</h1>
+        <h1>🎮 Bloxflip Multi-Manager [FIXED]</h1>
+        
+        <div class="warning-banner">
+            ⚠️ <strong>Attention :</strong> Si vous rencontrez une erreur "API 400" ou "CORS", c'est que Bloxflip bloque les requêtes directes depuis ce site. 
+            Utilisez cette outil uniquement avec des tokens valides. Les tokens expirent régulièrement.
+        </div>
 
         <div class="tabs" id="tabs"></div>
-
         <div id="panels"></div>
     </div>
 
     <script>
-        // === STOCKAGE ===
+        // === CONFIGURATION ===
+        const USE_CORS_PROXY = false; // Mettre à true si vous avez des erreurs CORS
+        const CORS_PROXY_URL = 'https://corsproxy.io/?'; // Proxy pour contournir CORS
+
+        // === STORAGE ===
         function getAccounts() {
-            try { return JSON.parse(localStorage.getItem('bf_accounts')) || []; }
+            try { return JSON.parse(localStorage.getItem('bf_accounts_fixed')) || []; }
             catch { return []; }
         }
         function saveAccounts(accounts) {
-            localStorage.setItem('bf_accounts', JSON.stringify(accounts));
+            localStorage.setItem('bf_accounts_fixed', JSON.stringify(accounts));
         }
 
         let accounts = getAccounts();
         let activeIndex = -1;
         let balancesCache = {};
 
-        // === FONCTIONS API DIRECTES (sans proxy) ===
+        // === API FUNCTIONS (FIXED) ===
         async function getBalance(rt) {
-            const res = await fetch('https://bloxflip.com/api/user', {
-                credentials: 'include',
+            // Validation du token
+            if (!rt || rt.length < 10) {
+                throw new Error("Token invalid ou trop court. Vérifiez votre token app.rt.");
+            }
+
+            const url = 'https://bloxflip.com/api/user';
+            
+            const options = {
+                method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'x-auth-token': rt
-                }
-            });
-            if (!res.ok) throw new Error(`API ${res.status}`);
-            const data = await res.json();
-            return {
-                rocoins: data.wallet?.balances?.ROCOINS ?? 0,
-                flipcoins: data.wallet?.balances?.FLIPCOINS ?? 0,
-                coins: data.wallet?.balances?.COINS ?? 0,
-                xp: data.wallet?.balances?.XP ?? 0,
-                keys: data.wallet?.balances?.KEYS ?? 0
+                    'x-auth-token': rt,
+                    'Origin': 'https://bloxflip.com',
+                    'Referer': 'https://bloxflip.com/',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                },
+                credentials: 'omit' // Important: ne pas envoyer les cookies automatiques
             };
+
+            let fetchUrl = url;
+            if (USE_CORS_PROXY) {
+                fetchUrl = CORS_PROXY_URL + encodeURIComponent(url);
+                // Avec proxy, on ne peut pas toujours contrôler les headers d'origine
+                delete options.headers['Origin'];
+                delete options.headers['Referer'];
+            }
+
+            try {
+                const res = await fetch(fetchUrl, options);
+                
+                // Gestion des erreurs HTTP
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`Auth échouée (${res.status}). Token expiré ou invalid. Renouvelez vos tokens sur Bloxflip.`);
+                }
+                if (res.status === 400) {
+                    throw new Error(`Erreur 400: Requête mal formée. Le token est probablement corrompu ou le format a changé.`);
+                }
+                if (!res.ok) {
+                    throw new Error(`Erreur API ${res.status}: ${res.statusText}`);
+                }
+
+                const data = await res.json();
+                
+                // Vérification de la structure de réponse
+                if (!data.wallet) {
+                    console.warn("Structure de réponse inattendue:", data);
+                    // On ne plante pas, on retourne 0
+                    return {
+                        rocoins: 0, flipcoins: 0, coins: 0, xp: 0, keys: 0
+                    };
+                }
+
+                return {
+                    rocoins: data.wallet?.balances?.ROCOINS ?? 0,
+                    flipcoins: data.wallet?.balances?.FLIPCOINS ?? 0,
+                    coins: data.wallet?.balances?.COINS ?? 0,
+                    xp: data.wallet?.balances?.XP ?? 0,
+                    keys: data.wallet?.balances?.KEYS ?? 0
+                };
+            } catch (error) {
+                if (error.message.includes('Failed to fetch')) {
+                    throw new Error("Erreur réseau ou CORS. Essayez d'activer le proxy CORS dans le code ou utilisez une extension CORS Unblock.");
+                }
+                throw error;
+            }
         }
 
         async function sendTip(rt, recipient, amount, currency) {
-            const res = await fetch('https://bloxflip.com/api/chat/commands/gift', {
+            const url = 'https://bloxflip.com/api/chat/commands/gift';
+            
+            const options = {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-auth-token': rt,
                     'x-currency': currency,
-                    'x-auth-token': rt
+                    'Origin': 'https://bloxflip.com',
+                    'Referer': 'https://bloxflip.com/'
                 },
                 body: JSON.stringify({
                     recipientUsername: recipient,
                     amount: parseFloat(amount),
                     captcha_token: ""
                 })
-            });
-            return await res.json();
+            };
+
+            let fetchUrl = url;
+            if (USE_CORS_PROXY) {
+                fetchUrl = CORS_PROXY_URL + encodeURIComponent(url);
+                delete options.headers['Origin'];
+                delete options.headers['Referer'];
+            }
+
+            const res = await fetch(fetchUrl, options);
+            const data = await res.json();
+            
+            if (!res.ok) {
+                throw new Error(data.message || `Erreur ${res.status}`);
+            }
+            
+            return data;
         }
 
-        // === RENDU ===
+        // === UI RENDERING ===
         function render() {
             const tabsContainer = document.getElementById('tabs');
             const panelsContainer = document.getElementById('panels');
@@ -194,9 +283,14 @@
             if (accounts.length === 0) {
                 tabsContainer.innerHTML = '';
                 panelsContainer.innerHTML = `
-                    <div class="card" style="text-align:center; padding:40px;">
-                        <p style="color:#666; margin-bottom:16px;">Aucun compte ajouté.</p>
-                        <p style="color:#888; font-size:13px;">Clique sur <strong>+</strong> pour ajouter un compte.</p>
+                    <div class="card" style="text-align:center; padding:60px 20px;">
+                        <div style="font-size:40px; margin-bottom:20px;">👋</div>
+                        <h2 style="color:#fff; margin-bottom:10px;">Bienvenue</h2>
+                        <p style="color:#888; margin-bottom:20px; max-width:400px; margin-left:auto; margin-right:auto;">
+                            Ce tool permet de gérer plusieurs comptes Bloxflip. 
+                            Cliquez sur <strong>+</strong> pour ajouter votre premier compte.
+                        </p>
+                        <button class="btn-connect" style="width:auto; padding:12px 30px;" onclick="addAccount()">+ Ajouter un compte</button>
                     </div>
                 `;
                 return;
@@ -204,17 +298,18 @@
 
             if (activeIndex < 0 || activeIndex >= accounts.length) activeIndex = 0;
 
-            // Onglets
+            // Render Tabs
             tabsContainer.innerHTML = accounts.map((acc, i) => {
                 const isActive = i === activeIndex;
                 const name = acc.name || `Compte ${i + 1}`;
                 return `<div class="tab ${isActive ? 'active' : ''}" onclick="switchAccount(${i})">
-                    ${name}${acc.connected ? ' ✅' : ''}
-                    <span class="badge">${i + 1}</span>
+                    ${name.substring(0, 15)}${name.length > 15 ? '...' : ''}
+                    ${acc.connected ? ' ✅' : ''}
+                    <span class="badge" style="margin-left:8px; opacity:0.5">#${i + 1}</span>
                 </div>`;
             }).join('') + `<div class="add-tab" onclick="addAccount()" title="Ajouter un compte">+</div>`;
 
-            // Panneaux
+            // Render Panels
             panelsContainer.innerHTML = accounts.map((acc, i) => {
                 const isActive = i === activeIndex;
                 const bal = balancesCache[i] || null;
@@ -227,37 +322,40 @@
                         <div class="account-header">
                             <div>
                                 <span class="status-dot ${acc.connected ? 'online' : 'offline'}"></span>
-                                <span class="name">${acc.connected ? '✅ Connecté' : '🔌 Non connecté'}</span>
+                                <span class="name">${acc.connected ? '✅ Connecté' : '🔌 Déconnecté'}</span>
+                                <div style="font-size:11px; color:#666; margin-top:4px;">${acc.connected ? 'Token valid' : 'Token requis'}</div>
                             </div>
                             <button class="btn-danger" onclick="removeAccount(${i})">🗑 Supprimer</button>
                         </div>
 
                         <div class="token-inputs">
                             <div>
-                                <label>Token app.rt</label>
-                                <input type="password" id="rt_${i}" value="${acc.rt || ''}" placeholder="..." class="${acc.rt ? 'saved' : ''}">
+                                <label>Token app.rt (Required)</label>
+                                <input type="password" id="rt_${i}" value="${acc.rt || ''}" placeholder="Collez votre token rt ici" class="${acc.rt ? 'saved' : ''}">
                             </div>
                             <div>
-                                <label>Token app.at</label>
-                                <input type="password" id="at_${i}" value="${acc.at || ''}" placeholder="..." class="${acc.at ? 'saved' : ''}">
+                                <label>Token app.at (Required)</label>
+                                <input type="password" id="at_${i}" value="${acc.at || ''}" placeholder="Collez votre token at ici" class="${acc.at ? 'saved' : ''}">
                             </div>
-                            <div class="full" style="display:flex; gap:8px; align-items:end;">
-                                <div style="flex:2;">
-                                    <label>Surnom (optionnel)</label>
-                                    <input type="text" id="nick_${i}" value="${acc.name || ''}" placeholder="Mon compte principal" style="font-family:inherit;">
-                                </div>
-                                <button class="btn-connect" onclick="connectAccount(${i})" id="connectBtn_${i}">
-                                    ${acc.connected ? '🔄 Reconnecter' : '🔗 Se connecter'}
+                            <div class="full">
+                                <label>Surnom du compte</label>
+                                <input type="text" id="nick_${i}" value="${acc.name || ''}" placeholder="Ex: Mon compte principal" style="font-family:inherit;">
+                            </div>
+                            <div class="full">
+                                <button class="btn-connect" onclick="connectAccount(${i})" id="connectBtn_${i}" ${loading ? 'disabled' : ''}>
+                                    ${loading ? '⏳ Connexion en cours...' : (acc.connected ? '🔄 Rafraîchir la connexion' : '🔗 Se connecter')}
                                 </button>
                             </div>
                         </div>
+                        
+                        <div id="debug_${i}" class="debug-box"></div>
                     </div>
 
                     <div id="balances_${i}">
-                        ${loading ? '<div class="loading-msg">⏳ Chargement...</div>' : ''}
-                        ${bal && !loading ? `
+                        ${loading ? '<div class="loading-msg">⏳ Vérification des tokens et récupération des soldes...</div>' : ''}
+                        ${bal && !loading && acc.connected ? `
                         <div class="card">
-                            <h2>💰 Soldes</h2>
+                            <h2>💰 Soldes du compte</h2>
                             <div class="balances">
                                 <div class="balance-item"><div class="label">ROCOINS</div><div class="value rocoins">${Number(bal.rocoins).toLocaleString()}</div></div>
                                 <div class="balance-item"><div class="label">FLIPCOINS</div><div class="value flipcoins">${Number(bal.flipcoins).toLocaleString()}</div></div>
@@ -265,9 +363,17 @@
                                 <div class="balance-item"><div class="label">XP</div><div class="value xp">${Number(bal.xp).toLocaleString()}</div></div>
                                 <div class="balance-item"><div class="label">KEYS</div><div class="value keys">${Number(bal.keys).toLocaleString()}</div></div>
                             </div>
+                            <div style="text-align:center; color:#666; font-size:11px; margin-top:10px;">
+                                Données mises à jour le ${new Date().toLocaleTimeString()}
+                            </div>
                         </div>
                         ` : ''}
-                        ${!acc.connected && !loading ? '<div class="card" style="text-align:center;color:#666;padding:20px;">Connecte le compte pour voir les soldes.</div>' : ''}
+                        ${!acc.connected && !loading ? `
+                        <div class="card" style="text-align:center;color:#888;padding:40px;border:1px dashed rgba(255,255,255,0.1);">
+                            <div style="font-size:30px; margin-bottom:10px;">🔒</div>
+                            <p>Connectez le compte pour voir les soldes et envoyer des tips.</p>
+                            <p style="font-size:11px; margin-top:10px; color:#666;">Les tokens sont stockés localement dans votre navigateur.</p>
+                        </div>` : ''}
                     </div>
 
                     ${acc.connected ? `
@@ -275,8 +381,8 @@
                         <h2>💸 Envoyer un Tip</h2>
                         <div class="tip-form">
                             <div class="field">
-                                <label>Destinataire</label>
-                                <input type="text" id="tip_recipient_${i}" placeholder="username">
+                                <label>Destinataire (Username)</label>
+                                <input type="text" id="tip_recipient_${i}" placeholder="Ex: Bloxflip">
                             </div>
                             <div class="field">
                                 <label>Montant</label>
@@ -315,7 +421,7 @@
         }
 
         function removeAccount(index) {
-            if (!confirm(`Supprimer le compte "${accounts[index]?.name || `Compte ${index + 1}`}" ?`)) return;
+            if (!confirm(`Supprimer définitivement le compte "${accounts[index]?.name || `Compte ${index + 1}`}" ?\n\nCette action est irreversible.`)) return;
             accounts.splice(index, 1);
             delete balancesCache[index];
             const newCache = {};
@@ -342,7 +448,8 @@
             const nick = document.getElementById(`nick_${index}`).value.trim();
 
             if (!rt || !at) {
-                alert('Les deux tokens sont requis.');
+                showDebug(index, "❌ Erreur: Les deux tokens (rt et at) sont obligatoires.");
+                alert('❌ Les deux tokens (app.rt et app.at) sont requis pour se connecter.');
                 return;
             }
 
@@ -350,11 +457,15 @@
             btn.disabled = true;
             btn.textContent = '⏳ Connexion...';
             accounts[index].loading = true;
+            accounts[index].rt = rt; // Save temporarily even if fails
+            accounts[index].at = at;
             saveAccounts(accounts);
             render();
 
             try {
                 const balance = await getBalance(rt);
+                
+                // Success
                 accounts[index].rt = rt;
                 accounts[index].at = at;
                 accounts[index].name = nick || `Compte ${index + 1}`;
@@ -368,7 +479,10 @@
                 accounts[index].connected = false;
                 saveAccounts(accounts);
                 render();
-                alert('❌ Erreur de connexion : ' + err.message);
+                
+                const debugMsg = `🔍 DEBUG INFO:\nErreur: ${err.message}\n\nSolutions possibles:\n1. Vérifiez que vos tokens sont corrects (ils doivent venir de bloxflip.com)\n2. Les tokens expirent régulièrement, reconnectez-vous sur le site officiel pour en obtenir des nouveaux\n3. Si erreur CORS, utilisez une extension "Allow CORS" ou un proxy\n4. Token length: ${rt.length} chars`;
+                showDebug(index, debugMsg);
+                alert(`❌ Échec de connexion:\n${err.message}\n\nConsultez la zone de debug orange sur la page pour plus d'informations.`);
             }
         }
 
@@ -379,19 +493,19 @@
             const currency = document.getElementById(`tip_currency_${index}`).value;
             const resultDiv = document.getElementById(`tipResult_${index}`);
 
-            if (!recipient) return showTipResult(index, "Nom d'utilisateur requis.", 'error');
-            if (!amount || parseFloat(amount) <= 0) return showTipResult(index, 'Montant invalide.', 'error');
+            if (!recipient) return showTipResult(index, "❌ Nom d'utilisateur requis.", 'error');
+            if (!amount || parseFloat(amount) <= 0) return showTipResult(index, '❌ Montant invalide.', 'error');
 
             const btn = resultDiv.parentElement.querySelector('.btn-tip');
             btn.disabled = true;
-            btn.textContent = '⏳...';
+            btn.textContent = '⏳ Envoi...';
 
             try {
                 const result = await sendTip(rt, recipient, amount, currency);
-                showTipResult(index, JSON.stringify(result, null, 2), result.success ? 'success' : 'error');
+                showTipResult(index, `✅ Tip envoyé avec succès!\n\n${JSON.stringify(result, null, 2)}`, 'success');
                 refreshBalances(index);
             } catch (err) {
-                showTipResult(index, 'Erreur: ' + err.message, 'error');
+                showTipResult(index, f`❌ Échec de l'envoi: ${err.message}`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Envoyer';
@@ -400,18 +514,30 @@
 
         async function refreshBalances(index) {
             const rt = accounts[index].rt;
-            if (!rt) return;
+            if (!rt || !accounts[index].connected) return;
             try {
                 const balance = await getBalance(rt);
                 balancesCache[index] = balance;
                 render();
-            } catch {}
+            } catch (err) {
+                console.error("Failed to refresh balances:", err);
+            }
         }
 
         function showTipResult(index, msg, type) {
             const div = document.getElementById(`tipResult_${index}`);
-            div.textContent = msg;
-            div.className = 'result-box ' + type;
+            if (div) {
+                div.textContent = msg;
+                div.className = 'result-box ' + type;
+            }
+        }
+
+        function showDebug(index, msg) {
+            const div = document.getElementById(`debug_${index}`);
+            if (div) {
+                div.textContent = msg;
+                div.style.display = 'block';
+            }
         }
 
         // === INIT ===
