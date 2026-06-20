@@ -135,8 +135,8 @@
     </div>
 
     <script>
-        // Configuration du proxy CORS (change si celui-ci ne marche plus)
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+        // === TON PROXY CLOUDFLARE WORKER ===
+        const CORS_PROXY = 'https://misty-flower-542b.noahvigneron14.workers.dev/?url=';
 
         // === STOCKAGE ===
         function getAccounts() {
@@ -151,7 +151,7 @@
         let activeIndex = -1;
         let balancesCache = {};
 
-        // === FONCTIONS API AVEC PROXY ===
+        // === FONCTIONS API AVEC TON PROXY ===
         async function getBalance(rt) {
             const target = 'https://bloxflip.com/api/user';
             const res = await fetch(CORS_PROXY + encodeURIComponent(target), {
